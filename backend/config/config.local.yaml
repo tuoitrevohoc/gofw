@@ -1,0 +1,4 @@
+db:
+  url: "postgresql://dev:dev@localhost:5432/app?sslmode=disable"
+
+port: "8000"
