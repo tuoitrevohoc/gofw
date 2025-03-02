@@ -1,0 +1,8 @@
+type Query {
+  # Queries will be added by Ent
+  node(id: ID!): Node
+}
+
+interface Node {
+  id: ID!
+} 
