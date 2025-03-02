@@ -13,7 +13,10 @@ func GQLHandler(schema graphql.ExecutableSchema) *handler.Server {
 	srv := handler.NewDefaultServer(schema)
 	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
 		err := graphql.DefaultErrorPresenter(ctx, e)
-		logger := FromContext(ctx)
+		logger := ContextLogger(ctx)
+		statsd := ContextStatsd(ctx)
+
+		statsd.Incr("graphql_error", []string{"path:" + err.Path.String()}, 1)
 		logger.Error("GraphQL error", zap.Error(err))
 		return err
 	})

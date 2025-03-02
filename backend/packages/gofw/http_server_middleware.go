@@ -15,12 +15,22 @@ type statsdKey struct{}
 
 const RequestIDHeader = "X-Request-ID"
 
-// FromContext retrieves the logger from the context
-func FromContext(ctx context.Context) *zap.Logger {
+// ContextLogger retrieves the logger from the context
+func ContextLogger(ctx context.Context) *zap.Logger {
 	if logger, ok := ctx.Value(loggerKey{}).(*zap.Logger); ok {
 		return logger
 	}
 	return zap.NewNop()
+}
+
+func ContextStatsd(ctx context.Context) *statsd.Client {
+	if statsd, ok := ctx.Value(statsdKey{}).(*statsd.Client); ok {
+		return statsd
+	}
+
+	logger := ContextLogger(ctx)
+	logger.Error("Statsd client not found in context")
+	return nil
 }
 
 // WithLogger adds a logger to the context
