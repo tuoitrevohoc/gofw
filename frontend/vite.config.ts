@@ -8,5 +8,11 @@ export default defineConfig({
     host: true, // Listen on all available network interfaces
     port: 3000,
     strictPort: true, // Fail if port is already in use
+    proxy: {
+      '/graphql': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   }
 })
