@@ -66,6 +66,19 @@ func ServiceManagerMiddleware(manager *ServiceManager) func(http.Handler) http.H
 			ctx = WithStatsd(ctx, manager.Statsd())
 			ctx = WithRequestID(ctx, requestID)
 
+			// Add panic recovery
+			defer func() {
+				if err := recover(); err != nil {
+					requestLogger.Error("panic occurred during request handling",
+						zap.Any("error", err),
+						zap.String("request_id", requestID),
+						zap.String("path", r.URL.Path),
+						zap.String("method", r.Method),
+					)
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+			}()
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
