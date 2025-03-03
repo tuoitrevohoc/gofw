@@ -5,13 +5,14 @@
             "label": "refresh-schema",
             "type": "shell",
             "presentation": {
-                "reveal": "always",
-                "panel": "new"
+                "reveal": "silent",
+                "panel": "shared",
+                "close": true
             },
             "options": {
-                "cwd": "${workspaceFolder}"
+                "cwd": "${workspaceFolder}/frontend"
             },
-            "command": "sleep 10 && cd frontend && npm run fetch-schema"
+            "command": "npm run fetch-schema",
         }
     ]
 } 
