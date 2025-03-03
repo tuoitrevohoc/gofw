@@ -14,6 +14,10 @@
     "dev:relay": "concurrently \"npm run dev\" \"npm run relay:watch\""
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/lab": "^6.0.0-beta.29",
+    "@mui/material": "^6.4.6",
     "@types/relay-runtime": "^18.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

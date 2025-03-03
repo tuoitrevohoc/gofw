@@ -5,12 +5,12 @@ import {
   Store,
   FetchFunction,
   GraphQLResponse,
-  Operation,
+  RequestParameters,
   Variables,
 } from 'relay-runtime';
 
 const fetchQuery: FetchFunction = async (
-  operation: Operation,
+  operation: RequestParameters,
   variables: Variables,
 ): Promise<GraphQLResponse> => {
   const response = await fetch('/graphql', {
