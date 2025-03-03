@@ -12,9 +12,9 @@ import (
 
 func main() {
 	ex, err := entgql.NewExtension(
-		entgql.WithWhereInputs(true),
 		entgql.WithConfigPath("gqlgen.yml"),
 		entgql.WithSchemaPath("schema/graphql/ent.graphql"),
+		entgql.WithSchemaGenerator(),
 	)
 	if err != nil {
 		log.Fatalf("creating entgql extension: %v", err)
@@ -23,6 +23,8 @@ func main() {
 	opts := []entc.Option{
 		entc.Extensions(ex),
 		entc.FeatureNames("schema/migrate"),
+		entc.FeatureNames("entql"),
+		entc.FeatureNames("sql/globalid"),
 	}
 
 	if err := entc.Generate("./schema/models", &gen.Config{

@@ -2,6 +2,7 @@ package models
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
 )
 
@@ -20,4 +21,8 @@ func (User) Fields() []ent.Field {
 
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{}
+}
+
+func (User) Annotations() []schema.Annotation {
+	return []schema.Annotation{}
 }

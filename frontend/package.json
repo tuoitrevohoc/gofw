@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "relay": "relay-compiler",
     "relay:watch": "relay-compiler --watch",
-    "fetch-schema": "get-graphql-schema http://localhost:8000/graphql > src/relay/schema.graphql"
+    "fetch-schema": "get-graphql-schema http://localhost:8000/graphql > src/relay/schema.graphql",
+    "dev:relay": "concurrently \"npm run dev\" \"npm run relay:watch\""
   },
   "dependencies": {
     "@types/relay-runtime": "^18.2.5",
@@ -26,6 +27,7 @@
     "@types/react-relay": "^16.0.5",
     "@vitejs/plugin-react-swc": "^3.8.0",
     "babel-plugin-relay": "^16.2.0",
+    "concurrently": "^8.2.2",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
