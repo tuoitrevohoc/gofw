@@ -1,4 +1,4 @@
-package graphql
+package resolvers
 
 import (
 	"github.com/99designs/gqlgen/graphql/handler"

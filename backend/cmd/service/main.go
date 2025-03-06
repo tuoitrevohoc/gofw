@@ -6,7 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/tuoitrevohoc/gofw/backend/internal/config"
 	"github.com/tuoitrevohoc/gofw/backend/internal/db"
-	"github.com/tuoitrevohoc/gofw/backend/internal/graphql"
+	"github.com/tuoitrevohoc/gofw/backend/internal/resolvers"
 	"github.com/tuoitrevohoc/gofw/backend/packages/gofw"
 	"go.uber.org/zap"
 )
@@ -31,7 +31,7 @@ func main() {
 		logger.Fatal("Failed to create schema", zap.Error(err))
 	}
 
-	graphqlHandler := graphql.NewHandler(entClient)
+	graphqlHandler := resolvers.NewHandler(entClient)
 
 	server := gofw.NewHttpServer(manager, cfg.Port)
 	server.AddHandler("/graphql", graphqlHandler)

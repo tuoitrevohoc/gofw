@@ -1,4 +1,4 @@
-package graphql
+package resolvers
 
 import (
 	"context"
@@ -36,4 +36,8 @@ func parseGUID(_ context.Context, guid string) (int, string, error) {
 	}
 
 	return id, parts[0], nil
+}
+
+func toGUID(typ string, id int) string {
+	return fmt.Sprintf("%s/%d", typ, id)
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/graphql/model"
+	"github.com/tuoitrevohoc/gofw/backend/internal/scalars"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -42,6 +43,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	User() UserResolver
 }
 
 type DirectiveRoot struct {
@@ -61,8 +63,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Node  func(childComplexity int, id string) int
-		Nodes func(childComplexity int, ids []string) int
+		Node  func(childComplexity int, id scalars.GUID) int
+		Nodes func(childComplexity int, ids []*scalars.GUID) int
 	}
 
 	User struct {
@@ -83,8 +85,11 @@ type MutationResolver interface {
 	SignIn(ctx context.Context, input model.SignInInput) (*ent.User, error)
 }
 type QueryResolver interface {
-	Node(ctx context.Context, id string) (ent.Noder, error)
-	Nodes(ctx context.Context, ids []string) ([]ent.Noder, error)
+	Node(ctx context.Context, id scalars.GUID) (ent.Noder, error)
+	Nodes(ctx context.Context, ids []*scalars.GUID) ([]ent.Noder, error)
+}
+type UserResolver interface {
+	ID(ctx context.Context, obj *ent.User) (*scalars.GUID, error)
 }
 
 type executableSchema struct {
@@ -168,7 +173,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Node(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.Node(childComplexity, args["id"].(scalars.GUID)), true
 
 	case "Query.nodes":
 		if e.complexity.Query.Nodes == nil {
@@ -180,7 +185,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Nodes(childComplexity, args["ids"].([]string)), true
+		return e.complexity.Query.Nodes(childComplexity, args["ids"].([]*scalars.GUID)), true
 
 	case "User.avatar":
 		if e.complexity.User.Avatar == nil {
@@ -534,18 +539,18 @@ func (ec *executionContext) field_Query_node_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field_Query_node_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (string, error) {
+) (scalars.GUID, error) {
 	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal string
+		var zeroVal scalars.GUID
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
+		return ec.unmarshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, tmp)
 	}
 
-	var zeroVal string
+	var zeroVal scalars.GUID
 	return zeroVal, nil
 }
 
@@ -562,18 +567,18 @@ func (ec *executionContext) field_Query_nodes_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_nodes_argsIds(
 	ctx context.Context,
 	rawArgs map[string]any,
-) ([]string, error) {
+) ([]*scalars.GUID, error) {
 	if _, ok := rawArgs["ids"]; !ok {
-		var zeroVal []string
+		var zeroVal []*scalars.GUID
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
 	if tmp, ok := rawArgs["ids"]; ok {
-		return ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
+		return ec.unmarshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUIDᚄ(ctx, tmp)
 	}
 
-	var zeroVal []string
+	var zeroVal []*scalars.GUID
 	return zeroVal, nil
 }
 
@@ -1015,7 +1020,7 @@ func (ec *executionContext) _Query_node(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Node(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Query().Node(rctx, fc.Args["id"].(scalars.GUID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1067,7 +1072,7 @@ func (ec *executionContext) _Query_nodes(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Nodes(rctx, fc.Args["ids"].([]string))
+		return ec.resolvers.Query().Nodes(rctx, fc.Args["ids"].([]*scalars.GUID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1253,7 +1258,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return ec.resolvers.User().ID(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1265,17 +1270,17 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*scalars.GUID)
 	fc.Result = res
-	return ec.marshalNID2int(ctx, field.Selections, res)
+	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
 		},
@@ -3754,21 +3759,52 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("User")
 		case "id":
-			out.Values[i] = ec._User_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "name":
 			out.Values[i] = ec._User_name(ctx, field, obj)
 		case "email":
 			out.Values[i] = ec._User_email(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "password":
 			out.Values[i] = ec._User_password(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "avatar":
 			out.Values[i] = ec._User_avatar(ctx, field, obj)
@@ -4181,46 +4217,26 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2int(ctx context.Context, v any) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, v any) (scalars.GUID, error) {
+	var res scalars.GUID
+	err := res.UnmarshalGQLContext(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
+func (ec *executionContext) marshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, sel ast.SelectionSet, v scalars.GUID) graphql.Marshaler {
+	return graphql.WrapContextMarshaler(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
-	res, err := graphql.UnmarshalID(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalID(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+func (ec *executionContext) unmarshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUIDᚄ(ctx context.Context, v any) ([]*scalars.GUID, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
 	}
 	var err error
-	res := make([]string, len(vSlice))
+	res := make([]*scalars.GUID, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -4228,10 +4244,10 @@ func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v any
 	return res, nil
 }
 
-func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+func (ec *executionContext) marshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUIDᚄ(ctx context.Context, sel ast.SelectionSet, v []*scalars.GUID) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+		ret[i] = ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, sel, v[i])
 	}
 
 	for _, e := range ret {
@@ -4241,6 +4257,22 @@ func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, v any) (*scalars.GUID, error) {
+	var res = new(scalars.GUID)
+	err := res.UnmarshalGQLContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, sel ast.SelectionSet, v *scalars.GUID) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return graphql.WrapContextMarshaler(ctx, v)
 }
 
 func (ec *executionContext) marshalNNode2ᚕgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐNoder(ctx context.Context, sel ast.SelectionSet, v []ent.Noder) graphql.Marshaler {

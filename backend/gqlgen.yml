@@ -11,8 +11,8 @@ model:
 
 resolver:
   layout: follow-schema
-  dir: internal/graphql
-  package: graphql
+  dir: internal/resolvers
+  package: resolvers
   filename_template: "{name}.resolvers.go"
 
 autobind:
@@ -21,10 +21,7 @@ autobind:
 models:
   ID:
     model:
-      - github.com/99designs/gqlgen/graphql.ID
-      - github.com/99designs/gqlgen/graphql.Int
-      - github.com/99designs/gqlgen/graphql.Int64
-      - github.com/99designs/gqlgen/graphql.Int32
+      - github.com/tuoitrevohoc/gofw/backend/internal/scalars.GUID
   Node:
     model:
       - "github.com/tuoitrevohoc/gofw/backend/gen/go/ent.Noder"
