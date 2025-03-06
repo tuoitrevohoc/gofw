@@ -1,12 +1,8 @@
 package resolvers
 
 import (
-	"context"
-	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
+	"github.com/tuoitrevohoc/gofw/backend/internal/auth"
 )
 
 // This file will not be regenerated automatically.
@@ -15,29 +11,11 @@ import (
 
 // Resolver is the resolver root.
 type Resolver struct {
-	client *ent.Client
+	client        *ent.Client
+	authenticator *auth.Authenticator
 }
 
 // NewResolver creates a new resolver.
-func NewResolver(client *ent.Client) *Resolver {
-	return &Resolver{client: client}
-}
-
-func parseGUID(_ context.Context, guid string) (int, string, error) {
-	parts := strings.Split(guid, "/")
-
-	if len(parts) != 2 {
-		return 0, "", fmt.Errorf("unexpected id format. expect Type/ID, but got: %s", guid)
-	}
-
-	id, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return 0, "", fmt.Errorf("invalid id: %s", parts[1])
-	}
-
-	return id, parts[0], nil
-}
-
-func toGUID(typ string, id int) string {
-	return fmt.Sprintf("%s/%d", typ, id)
+func NewResolver(client *ent.Client, authenticator *auth.Authenticator) *Resolver {
+	return &Resolver{client: client, authenticator: authenticator}
 }

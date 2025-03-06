@@ -25,3 +25,19 @@ models:
   Node:
     model:
       - "github.com/tuoitrevohoc/gofw/backend/gen/go/ent.Noder"
+  PublicKeyCredentialCreationOptions:
+    model: github.com/go-webauthn/webauthn/protocol.PublicKeyCredentialCreationOptions
+  PublicKeyCredentialRpEntity:
+    model: github.com/go-webauthn/webauthn/protocol.RelyingPartyEntity
+  PublicKeyCredentialUserEntity:
+    model: github.com/go-webauthn/webauthn/protocol.UserEntity
+  PublicKeyCredentialParameters:
+    model: github.com/go-webauthn/webauthn/protocol.CredentialParameter
+  AuthenticatorSelectionCriteria:
+    model: github.com/go-webauthn/webauthn/protocol.AuthenticatorSelection
+  PublicKeyCredentialDescriptor:
+    model: github.com/go-webauthn/webauthn/protocol.CredentialDescriptor
+  AuthenticationExtensionsClientInputs:
+    model: github.com/go-webauthn/webauthn/protocol.AuthenticationExtensions
+  CredentialCreation:
+    model: github.com/go-webauthn/webauthn/protocol.CredentialCreation

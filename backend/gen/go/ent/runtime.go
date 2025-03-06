@@ -3,6 +3,8 @@
 package ent
 
 import (
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	"github.com/tuoitrevohoc/gofw/backend/schema/models"
 )
@@ -11,14 +13,30 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	authsessionFields := models.AuthSession{}.Fields()
+	_ = authsessionFields
+	// authsessionDescData is the schema descriptor for data field.
+	authsessionDescData := authsessionFields[0].Descriptor()
+	// authsession.DataValidator is a validator for the "data" field. It is called by the builders before save.
+	authsession.DataValidator = authsessionDescData.Validators[0].(func(string) error)
+	credentialFields := models.Credential{}.Fields()
+	_ = credentialFields
+	// credentialDescPublicKey is the schema descriptor for public_key field.
+	credentialDescPublicKey := credentialFields[0].Descriptor()
+	// credential.PublicKeyValidator is a validator for the "public_key" field. It is called by the builders before save.
+	credential.PublicKeyValidator = credentialDescPublicKey.Validators[0].(func(string) error)
+	// credentialDescData is the schema descriptor for data field.
+	credentialDescData := credentialFields[1].Descriptor()
+	// credential.DataValidator is a validator for the "data" field. It is called by the builders before save.
+	credential.DataValidator = credentialDescData.Validators[0].(func(string) error)
 	userFields := models.User{}.Fields()
 	_ = userFields
 	// userDescEmail is the schema descriptor for email field.
 	userDescEmail := userFields[1].Descriptor()
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
-	// userDescPassword is the schema descriptor for password field.
-	userDescPassword := userFields[2].Descriptor()
-	// user.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
-	user.PasswordValidator = userDescPassword.Validators[0].(func(string) error)
+	// userDescFinishedRegistration is the schema descriptor for finished_registration field.
+	userDescFinishedRegistration := userFields[4].Descriptor()
+	// user.DefaultFinishedRegistration holds the default value on creation for the finished_registration field.
+	user.DefaultFinishedRegistration = userDescFinishedRegistration.Default.(bool)
 }

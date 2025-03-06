@@ -6,8 +6,10 @@ package resolvers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	graphql1 "github.com/tuoitrevohoc/gofw/backend/gen/go/graphql"
@@ -34,7 +36,7 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 		return nil, err
 	}
 
-	user, err := r.client.User.Create().SetEmail(input.Email).SetPassword(string(encryptedPassword)).Save(ctx)
+	user, err := r.client.User.Create().SetEmail(input.Email).SetPassword(string(encryptedPassword)).SetFinishedRegistration(true).Save(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +46,47 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 
 // SignIn is the resolver for the signIn field.
 func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*ent.User, error) {
-	panic(fmt.Errorf("not implemented: SignIn - signIn"))
+	user, err := r.client.User.Query().Where(user.Email(input.Email)).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// BeginAuthnRegistration is the resolver for the beginAuthnRegistration field.
+func (r *mutationResolver) BeginAuthnRegistration(ctx context.Context, email string) (*model.AuthnRegistrationResponse, error) {
+	credientialCreation, err := r.authenticator.BeginRegistration(ctx, email)
+
+	if err != nil {
+		return nil, fmt.Errorf("fail to begin passkey registration")
+	}
+
+	// convert credential to json
+	json, err := json.Marshal(credientialCreation)
+	if err != nil {
+		return nil, fmt.Errorf("fail to create credential creation json")
+	}
+
+	return &model.AuthnRegistrationResponse{
+		CredentialCreation: string(json),
+	}, nil
+}
+
+// FinishAuthnRegistration is the resolver for the finishAuthnRegistration field.
+func (r *mutationResolver) FinishAuthnRegistration(ctx context.Context, email string, response string) (*ent.User, error) {
+	parsedResponse, err := protocol.ParseCredentialCreationResponseBytes([]byte(response))
+
+	if err != nil {
+		return nil, fmt.Errorf("fail to parse credential creation response")
+	}
+
+	user, err := r.authenticator.FinishRegistration(ctx, email, parsedResponse)
+	if err != nil {
+		return nil, fmt.Errorf("fail to finish passkey registration")
+	}
+
+	return user, nil
 }
 
 // Mutation returns graphql1.MutationResolver implementation.

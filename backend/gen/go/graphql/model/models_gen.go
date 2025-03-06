@@ -6,6 +6,10 @@ import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
 )
 
+type AuthnRegistrationResponse struct {
+	CredentialCreation string `json:"credentialCreation"`
+}
+
 type SignInInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`

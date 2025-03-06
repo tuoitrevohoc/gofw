@@ -7,9 +7,13 @@ import {
   Typography,
   Alert,
 } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import useSignUpMutation from "../../relay/mutations/signUp";
+import {
+  useSignUpMutation,
+  useBeginAuthnRegistrationMutation,
+  useFinishAuthnRegistrationMutation,
+} from "../../relay/mutations/signUp";
 import getErrorMessage from "../../relay/getErrorMessage";
 
 function isValidateForm(
@@ -28,6 +32,31 @@ function isValidateForm(
   return email.length > 0;
 }
 
+function stringToArrayBuffer(binaryString: string) {
+  return Uint8Array.from(binaryString, (c) => c.charCodeAt(0)).buffer;
+}
+
+function base64Encode(binary: ArrayBuffer) {
+  const binaryString = String.fromCharCode(...new Uint8Array(binary));
+  return btoa(binaryString)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+}
+
+function encodeCredential(credential: PublicKeyCredential) {
+  const response = credential.response as AuthenticatorAttestationResponse;
+  return JSON.stringify({
+    id: credential.id,
+    type: credential.type,
+    rawId: base64Encode(credential.rawId),
+    response: {
+      clientDataJSON: base64Encode(response.clientDataJSON),
+      attestationObject: base64Encode(response.attestationObject),
+    },
+  });
+}
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -35,6 +64,51 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [commitSignUp, loading] = useSignUpMutation();
+  const [commitBeginAuthnRegistration, beginningAuthnRegistration] =
+    useBeginAuthnRegistrationMutation();
+
+  const [commitFinishAuthnRegistration] = useFinishAuthnRegistrationMutation();
+
+  async function startRegistration(creatorOptionsJSON: string) {
+    try {
+      const creatorOptions = JSON.parse(creatorOptionsJSON);
+      creatorOptions.publicKey.challenge = stringToArrayBuffer(
+        creatorOptions.publicKey.challenge
+      );
+      creatorOptions.publicKey.user.id = stringToArrayBuffer(
+        creatorOptions.publicKey.user.id
+      );
+
+      const credential = await navigator.credentials.create(creatorOptions);
+
+      console.log(credential);
+      console.log(JSON.stringify(credential));
+
+      commitFinishAuthnRegistration({
+        variables: {
+          email,
+          response: encodeCredential(
+            credential as unknown as PublicKeyCredential
+          ),
+        },
+        onCompleted: () => {
+          navigate("/");
+        },
+        onError,
+      });
+    } catch (error) {
+      console.error(error);
+      setError("Failed to create credential");
+    }
+  }
+
+  const onError = useCallback(
+    function (error: Error) {
+      const errorMessage = getErrorMessage(error);
+      setError(errorMessage);
+    },
+    [setError]
+  );
 
   function handleSignUp() {
     setError(null);
@@ -48,10 +122,19 @@ export default function RegisterPage() {
       onCompleted: () => {
         navigate("/");
       },
-      onError: (error) => {
-        const errorMessage = getErrorMessage(error);
-        setError(errorMessage);
+      onError,
+    });
+  }
+
+  function handleBeginAuthnRegistration() {
+    commitBeginAuthnRegistration({
+      variables: {
+        email,
       },
+      onCompleted: (data) => {
+        startRegistration(data.beginAuthnRegistration.credentialCreation);
+      },
+      onError,
     });
   }
 
@@ -82,6 +165,8 @@ export default function RegisterPage() {
           fullWidth
           variant="contained"
           size="large"
+          onClick={handleBeginAuthnRegistration}
+          loading={beginningAuthnRegistration}
         >
           Continue with no password
         </Button>

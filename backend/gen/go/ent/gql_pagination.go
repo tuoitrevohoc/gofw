@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/errcode"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
@@ -93,6 +95,504 @@ func paginateLimit(first, last *int) int {
 		limit = *last + 1
 	}
 	return limit
+}
+
+// AuthSessionEdge is the edge representation of AuthSession.
+type AuthSessionEdge struct {
+	Node   *AuthSession `json:"node"`
+	Cursor Cursor       `json:"cursor"`
+}
+
+// AuthSessionConnection is the connection containing edges to AuthSession.
+type AuthSessionConnection struct {
+	Edges      []*AuthSessionEdge `json:"edges"`
+	PageInfo   PageInfo           `json:"pageInfo"`
+	TotalCount int                `json:"totalCount"`
+}
+
+func (c *AuthSessionConnection) build(nodes []*AuthSession, pager *authsessionPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *AuthSession
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *AuthSession {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *AuthSession {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*AuthSessionEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &AuthSessionEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// AuthSessionPaginateOption enables pagination customization.
+type AuthSessionPaginateOption func(*authsessionPager) error
+
+// WithAuthSessionOrder configures pagination ordering.
+func WithAuthSessionOrder(order *AuthSessionOrder) AuthSessionPaginateOption {
+	if order == nil {
+		order = DefaultAuthSessionOrder
+	}
+	o := *order
+	return func(pager *authsessionPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultAuthSessionOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithAuthSessionFilter configures pagination filter.
+func WithAuthSessionFilter(filter func(*AuthSessionQuery) (*AuthSessionQuery, error)) AuthSessionPaginateOption {
+	return func(pager *authsessionPager) error {
+		if filter == nil {
+			return errors.New("AuthSessionQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type authsessionPager struct {
+	reverse bool
+	order   *AuthSessionOrder
+	filter  func(*AuthSessionQuery) (*AuthSessionQuery, error)
+}
+
+func newAuthSessionPager(opts []AuthSessionPaginateOption, reverse bool) (*authsessionPager, error) {
+	pager := &authsessionPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultAuthSessionOrder
+	}
+	return pager, nil
+}
+
+func (p *authsessionPager) applyFilter(query *AuthSessionQuery) (*AuthSessionQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *authsessionPager) toCursor(as *AuthSession) Cursor {
+	return p.order.Field.toCursor(as)
+}
+
+func (p *authsessionPager) applyCursors(query *AuthSessionQuery, after, before *Cursor) (*AuthSessionQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultAuthSessionOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *authsessionPager) applyOrder(query *AuthSessionQuery) *AuthSessionQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultAuthSessionOrder.Field {
+		query = query.Order(DefaultAuthSessionOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *authsessionPager) orderExpr(query *AuthSessionQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultAuthSessionOrder.Field {
+			b.Comma().Ident(DefaultAuthSessionOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to AuthSession.
+func (as *AuthSessionQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...AuthSessionPaginateOption,
+) (*AuthSessionConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newAuthSessionPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if as, err = pager.applyFilter(as); err != nil {
+		return nil, err
+	}
+	conn := &AuthSessionConnection{Edges: []*AuthSessionEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := as.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if as, err = pager.applyCursors(as, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		as.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := as.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	as = pager.applyOrder(as)
+	nodes, err := as.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+// AuthSessionOrderField defines the ordering field of AuthSession.
+type AuthSessionOrderField struct {
+	// Value extracts the ordering value from the given AuthSession.
+	Value    func(*AuthSession) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) authsession.OrderOption
+	toCursor func(*AuthSession) Cursor
+}
+
+// AuthSessionOrder defines the ordering of AuthSession.
+type AuthSessionOrder struct {
+	Direction OrderDirection         `json:"direction"`
+	Field     *AuthSessionOrderField `json:"field"`
+}
+
+// DefaultAuthSessionOrder is the default ordering of AuthSession.
+var DefaultAuthSessionOrder = &AuthSessionOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &AuthSessionOrderField{
+		Value: func(as *AuthSession) (ent.Value, error) {
+			return as.ID, nil
+		},
+		column: authsession.FieldID,
+		toTerm: authsession.ByID,
+		toCursor: func(as *AuthSession) Cursor {
+			return Cursor{ID: as.ID}
+		},
+	},
+}
+
+// ToEdge converts AuthSession into AuthSessionEdge.
+func (as *AuthSession) ToEdge(order *AuthSessionOrder) *AuthSessionEdge {
+	if order == nil {
+		order = DefaultAuthSessionOrder
+	}
+	return &AuthSessionEdge{
+		Node:   as,
+		Cursor: order.Field.toCursor(as),
+	}
+}
+
+// CredentialEdge is the edge representation of Credential.
+type CredentialEdge struct {
+	Node   *Credential `json:"node"`
+	Cursor Cursor      `json:"cursor"`
+}
+
+// CredentialConnection is the connection containing edges to Credential.
+type CredentialConnection struct {
+	Edges      []*CredentialEdge `json:"edges"`
+	PageInfo   PageInfo          `json:"pageInfo"`
+	TotalCount int               `json:"totalCount"`
+}
+
+func (c *CredentialConnection) build(nodes []*Credential, pager *credentialPager, after *Cursor, first *int, before *Cursor, last *int) {
+	c.PageInfo.HasNextPage = before != nil
+	c.PageInfo.HasPreviousPage = after != nil
+	if first != nil && *first+1 == len(nodes) {
+		c.PageInfo.HasNextPage = true
+		nodes = nodes[:len(nodes)-1]
+	} else if last != nil && *last+1 == len(nodes) {
+		c.PageInfo.HasPreviousPage = true
+		nodes = nodes[:len(nodes)-1]
+	}
+	var nodeAt func(int) *Credential
+	if last != nil {
+		n := len(nodes) - 1
+		nodeAt = func(i int) *Credential {
+			return nodes[n-i]
+		}
+	} else {
+		nodeAt = func(i int) *Credential {
+			return nodes[i]
+		}
+	}
+	c.Edges = make([]*CredentialEdge, len(nodes))
+	for i := range nodes {
+		node := nodeAt(i)
+		c.Edges[i] = &CredentialEdge{
+			Node:   node,
+			Cursor: pager.toCursor(node),
+		}
+	}
+	if l := len(c.Edges); l > 0 {
+		c.PageInfo.StartCursor = &c.Edges[0].Cursor
+		c.PageInfo.EndCursor = &c.Edges[l-1].Cursor
+	}
+	if c.TotalCount == 0 {
+		c.TotalCount = len(nodes)
+	}
+}
+
+// CredentialPaginateOption enables pagination customization.
+type CredentialPaginateOption func(*credentialPager) error
+
+// WithCredentialOrder configures pagination ordering.
+func WithCredentialOrder(order *CredentialOrder) CredentialPaginateOption {
+	if order == nil {
+		order = DefaultCredentialOrder
+	}
+	o := *order
+	return func(pager *credentialPager) error {
+		if err := o.Direction.Validate(); err != nil {
+			return err
+		}
+		if o.Field == nil {
+			o.Field = DefaultCredentialOrder.Field
+		}
+		pager.order = &o
+		return nil
+	}
+}
+
+// WithCredentialFilter configures pagination filter.
+func WithCredentialFilter(filter func(*CredentialQuery) (*CredentialQuery, error)) CredentialPaginateOption {
+	return func(pager *credentialPager) error {
+		if filter == nil {
+			return errors.New("CredentialQuery filter cannot be nil")
+		}
+		pager.filter = filter
+		return nil
+	}
+}
+
+type credentialPager struct {
+	reverse bool
+	order   *CredentialOrder
+	filter  func(*CredentialQuery) (*CredentialQuery, error)
+}
+
+func newCredentialPager(opts []CredentialPaginateOption, reverse bool) (*credentialPager, error) {
+	pager := &credentialPager{reverse: reverse}
+	for _, opt := range opts {
+		if err := opt(pager); err != nil {
+			return nil, err
+		}
+	}
+	if pager.order == nil {
+		pager.order = DefaultCredentialOrder
+	}
+	return pager, nil
+}
+
+func (p *credentialPager) applyFilter(query *CredentialQuery) (*CredentialQuery, error) {
+	if p.filter != nil {
+		return p.filter(query)
+	}
+	return query, nil
+}
+
+func (p *credentialPager) toCursor(c *Credential) Cursor {
+	return p.order.Field.toCursor(c)
+}
+
+func (p *credentialPager) applyCursors(query *CredentialQuery, after, before *Cursor) (*CredentialQuery, error) {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	for _, predicate := range entgql.CursorsPredicate(after, before, DefaultCredentialOrder.Field.column, p.order.Field.column, direction) {
+		query = query.Where(predicate)
+	}
+	return query, nil
+}
+
+func (p *credentialPager) applyOrder(query *CredentialQuery) *CredentialQuery {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	query = query.Order(p.order.Field.toTerm(direction.OrderTermOption()))
+	if p.order.Field != DefaultCredentialOrder.Field {
+		query = query.Order(DefaultCredentialOrder.Field.toTerm(direction.OrderTermOption()))
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return query
+}
+
+func (p *credentialPager) orderExpr(query *CredentialQuery) sql.Querier {
+	direction := p.order.Direction
+	if p.reverse {
+		direction = direction.Reverse()
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(p.order.Field.column)
+	}
+	return sql.ExprFunc(func(b *sql.Builder) {
+		b.Ident(p.order.Field.column).Pad().WriteString(string(direction))
+		if p.order.Field != DefaultCredentialOrder.Field {
+			b.Comma().Ident(DefaultCredentialOrder.Field.column).Pad().WriteString(string(direction))
+		}
+	})
+}
+
+// Paginate executes the query and returns a relay based cursor connection to Credential.
+func (c *CredentialQuery) Paginate(
+	ctx context.Context, after *Cursor, first *int,
+	before *Cursor, last *int, opts ...CredentialPaginateOption,
+) (*CredentialConnection, error) {
+	if err := validateFirstLast(first, last); err != nil {
+		return nil, err
+	}
+	pager, err := newCredentialPager(opts, last != nil)
+	if err != nil {
+		return nil, err
+	}
+	if c, err = pager.applyFilter(c); err != nil {
+		return nil, err
+	}
+	conn := &CredentialConnection{Edges: []*CredentialEdge{}}
+	ignoredEdges := !hasCollectedField(ctx, edgesField)
+	if hasCollectedField(ctx, totalCountField) || hasCollectedField(ctx, pageInfoField) {
+		hasPagination := after != nil || first != nil || before != nil || last != nil
+		if hasPagination || ignoredEdges {
+			c := c.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+			conn.PageInfo.HasNextPage = first != nil && conn.TotalCount > 0
+			conn.PageInfo.HasPreviousPage = last != nil && conn.TotalCount > 0
+		}
+	}
+	if ignoredEdges || (first != nil && *first == 0) || (last != nil && *last == 0) {
+		return conn, nil
+	}
+	if c, err = pager.applyCursors(c, after, before); err != nil {
+		return nil, err
+	}
+	limit := paginateLimit(first, last)
+	if limit != 0 {
+		c.Limit(limit)
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := c.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
+			return nil, err
+		}
+	}
+	c = pager.applyOrder(c)
+	nodes, err := c.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	conn.build(nodes, pager, after, first, before, last)
+	return conn, nil
+}
+
+// CredentialOrderField defines the ordering field of Credential.
+type CredentialOrderField struct {
+	// Value extracts the ordering value from the given Credential.
+	Value    func(*Credential) (ent.Value, error)
+	column   string // field or computed.
+	toTerm   func(...sql.OrderTermOption) credential.OrderOption
+	toCursor func(*Credential) Cursor
+}
+
+// CredentialOrder defines the ordering of Credential.
+type CredentialOrder struct {
+	Direction OrderDirection        `json:"direction"`
+	Field     *CredentialOrderField `json:"field"`
+}
+
+// DefaultCredentialOrder is the default ordering of Credential.
+var DefaultCredentialOrder = &CredentialOrder{
+	Direction: entgql.OrderDirectionAsc,
+	Field: &CredentialOrderField{
+		Value: func(c *Credential) (ent.Value, error) {
+			return c.ID, nil
+		},
+		column: credential.FieldID,
+		toTerm: credential.ByID,
+		toCursor: func(c *Credential) Cursor {
+			return Cursor{ID: c.ID}
+		},
+	},
+}
+
+// ToEdge converts Credential into CredentialEdge.
+func (c *Credential) ToEdge(order *CredentialOrder) *CredentialEdge {
+	if order == nil {
+		order = DefaultCredentialOrder
+	}
+	return &CredentialEdge{
+		Node:   c,
+		Cursor: order.Field.toCursor(c),
+	}
 }
 
 // UserEdge is the edge representation of User.

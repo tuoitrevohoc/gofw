@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/tuoitrevohoc/gofw/backend/internal/auth"
 	"github.com/tuoitrevohoc/gofw/backend/internal/config"
 	"github.com/tuoitrevohoc/gofw/backend/internal/db"
 	"github.com/tuoitrevohoc/gofw/backend/internal/resolvers"
@@ -31,7 +32,8 @@ func main() {
 		logger.Fatal("Failed to create schema", zap.Error(err))
 	}
 
-	graphqlHandler := resolvers.NewHandler(entClient)
+	authenticator := auth.NewPasskeyAuthenticator(manager, entClient)
+	graphqlHandler := resolvers.NewHandler(entClient, authenticator)
 
 	server := gofw.NewHttpServer(manager, cfg.Port)
 	server.AddHandler("/graphql", graphqlHandler)

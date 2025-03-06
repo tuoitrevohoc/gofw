@@ -12,7 +12,14 @@ input SignInInput {
   password: String!
 }
 
+type AuthnRegistrationResponse {
+  credentialCreation: String!
+}
+
 extend type Mutation {
   signUp(input: SignUpInput!): User!
   signIn(input: SignInInput!): User!
+
+  beginAuthnRegistration(email: String!): AuthnRegistrationResponse!
+  finishAuthnRegistration(email: String!, response: String!): User!
 }

@@ -6,9 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
 
@@ -45,6 +48,14 @@ func (uc *UserCreate) SetPassword(s string) *UserCreate {
 	return uc
 }
 
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (uc *UserCreate) SetNillablePassword(s *string) *UserCreate {
+	if s != nil {
+		uc.SetPassword(*s)
+	}
+	return uc
+}
+
 // SetAvatar sets the "avatar" field.
 func (uc *UserCreate) SetAvatar(s string) *UserCreate {
 	uc.mutation.SetAvatar(s)
@@ -59,6 +70,68 @@ func (uc *UserCreate) SetNillableAvatar(s *string) *UserCreate {
 	return uc
 }
 
+// SetFinishedRegistration sets the "finished_registration" field.
+func (uc *UserCreate) SetFinishedRegistration(b bool) *UserCreate {
+	uc.mutation.SetFinishedRegistration(b)
+	return uc
+}
+
+// SetNillableFinishedRegistration sets the "finished_registration" field if the given value is not nil.
+func (uc *UserCreate) SetNillableFinishedRegistration(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetFinishedRegistration(*b)
+	}
+	return uc
+}
+
+// SetLastSignInAt sets the "last_sign_in_at" field.
+func (uc *UserCreate) SetLastSignInAt(t time.Time) *UserCreate {
+	uc.mutation.SetLastSignInAt(t)
+	return uc
+}
+
+// SetNillableLastSignInAt sets the "last_sign_in_at" field if the given value is not nil.
+func (uc *UserCreate) SetNillableLastSignInAt(t *time.Time) *UserCreate {
+	if t != nil {
+		uc.SetLastSignInAt(*t)
+	}
+	return uc
+}
+
+// SetAuthSessionsID sets the "auth_sessions" edge to the AuthSession entity by ID.
+func (uc *UserCreate) SetAuthSessionsID(id int) *UserCreate {
+	uc.mutation.SetAuthSessionsID(id)
+	return uc
+}
+
+// SetNillableAuthSessionsID sets the "auth_sessions" edge to the AuthSession entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableAuthSessionsID(id *int) *UserCreate {
+	if id != nil {
+		uc = uc.SetAuthSessionsID(*id)
+	}
+	return uc
+}
+
+// SetAuthSessions sets the "auth_sessions" edge to the AuthSession entity.
+func (uc *UserCreate) SetAuthSessions(a *AuthSession) *UserCreate {
+	return uc.SetAuthSessionsID(a.ID)
+}
+
+// AddCredentialIDs adds the "credentials" edge to the Credential entity by IDs.
+func (uc *UserCreate) AddCredentialIDs(ids ...int) *UserCreate {
+	uc.mutation.AddCredentialIDs(ids...)
+	return uc
+}
+
+// AddCredentials adds the "credentials" edges to the Credential entity.
+func (uc *UserCreate) AddCredentials(c ...*Credential) *UserCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddCredentialIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uc *UserCreate) Mutation() *UserMutation {
 	return uc.mutation
@@ -66,6 +139,7 @@ func (uc *UserCreate) Mutation() *UserMutation {
 
 // Save creates the User in the database.
 func (uc *UserCreate) Save(ctx context.Context) (*User, error) {
+	uc.defaults()
 	return withHooks(ctx, uc.sqlSave, uc.mutation, uc.hooks)
 }
 
@@ -91,6 +165,14 @@ func (uc *UserCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (uc *UserCreate) defaults() {
+	if _, ok := uc.mutation.FinishedRegistration(); !ok {
+		v := user.DefaultFinishedRegistration
+		uc.mutation.SetFinishedRegistration(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Email(); !ok {
@@ -101,13 +183,8 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if _, ok := uc.mutation.Password(); !ok {
-		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "User.password"`)}
-	}
-	if v, ok := uc.mutation.Password(); ok {
-		if err := user.PasswordValidator(v); err != nil {
-			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "User.password": %w`, err)}
-		}
+	if _, ok := uc.mutation.FinishedRegistration(); !ok {
+		return &ValidationError{Name: "finished_registration", err: errors.New(`ent: missing required field "User.finished_registration"`)}
 	}
 	return nil
 }
@@ -151,6 +228,46 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldAvatar, field.TypeString, value)
 		_node.Avatar = value
 	}
+	if value, ok := uc.mutation.FinishedRegistration(); ok {
+		_spec.SetField(user.FieldFinishedRegistration, field.TypeBool, value)
+		_node.FinishedRegistration = value
+	}
+	if value, ok := uc.mutation.LastSignInAt(); ok {
+		_spec.SetField(user.FieldLastSignInAt, field.TypeTime, value)
+		_node.LastSignInAt = value
+	}
+	if nodes := uc.mutation.AuthSessionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.AuthSessionsTable,
+			Columns: []string{user.AuthSessionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(authsession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.CredentialsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CredentialsTable,
+			Columns: []string{user.CredentialsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(credential.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -172,6 +289,7 @@ func (ucb *UserCreateBulk) Save(ctx context.Context) ([]*User, error) {
 	for i := range ucb.builders {
 		func(i int, root context.Context) {
 			builder := ucb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*UserMutation)
 				if !ok {

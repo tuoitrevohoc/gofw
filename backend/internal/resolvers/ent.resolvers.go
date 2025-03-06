@@ -14,6 +14,21 @@ import (
 	"github.com/tuoitrevohoc/gofw/backend/internal/scalars"
 )
 
+// ID is the resolver for the id field.
+func (r *authSessionResolver) ID(ctx context.Context, obj *ent.AuthSession) (*scalars.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// UserID is the resolver for the userID field.
+func (r *authSessionResolver) UserID(ctx context.Context, obj *ent.AuthSession) (*scalars.GUID, error) {
+	panic(fmt.Errorf("not implemented: UserID - userID"))
+}
+
+// ID is the resolver for the id field.
+func (r *credentialResolver) ID(ctx context.Context, obj *ent.Credential) (*scalars.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
 // Node is the resolver for the node field.
 func (r *queryResolver) Node(ctx context.Context, id scalars.GUID) (ent.Noder, error) {
 	return r.client.Noder(ctx, id.Id(), ent.WithFixedNodeType(id.NodeType()))
@@ -29,11 +44,19 @@ func (r *userResolver) ID(ctx context.Context, obj *ent.User) (*scalars.GUID, er
 	return scalars.NewGUID(string(user.Table), obj.ID), nil
 }
 
+// AuthSession returns graphql1.AuthSessionResolver implementation.
+func (r *Resolver) AuthSession() graphql1.AuthSessionResolver { return &authSessionResolver{r} }
+
+// Credential returns graphql1.CredentialResolver implementation.
+func (r *Resolver) Credential() graphql1.CredentialResolver { return &credentialResolver{r} }
+
 // Query returns graphql1.QueryResolver implementation.
 func (r *Resolver) Query() graphql1.QueryResolver { return &queryResolver{r} }
 
 // User returns graphql1.UserResolver implementation.
 func (r *Resolver) User() graphql1.UserResolver { return &userResolver{r} }
 
+type authSessionResolver struct{ *Resolver }
+type credentialResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

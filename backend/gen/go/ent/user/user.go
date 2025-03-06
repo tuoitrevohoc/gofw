@@ -4,6 +4,7 @@ package user
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -19,8 +20,30 @@ const (
 	FieldPassword = "password"
 	// FieldAvatar holds the string denoting the avatar field in the database.
 	FieldAvatar = "avatar"
+	// FieldFinishedRegistration holds the string denoting the finished_registration field in the database.
+	FieldFinishedRegistration = "finished_registration"
+	// FieldLastSignInAt holds the string denoting the last_sign_in_at field in the database.
+	FieldLastSignInAt = "last_sign_in_at"
+	// EdgeAuthSessions holds the string denoting the auth_sessions edge name in mutations.
+	EdgeAuthSessions = "auth_sessions"
+	// EdgeCredentials holds the string denoting the credentials edge name in mutations.
+	EdgeCredentials = "credentials"
 	// Table holds the table name of the user in the database.
 	Table = "users"
+	// AuthSessionsTable is the table that holds the auth_sessions relation/edge.
+	AuthSessionsTable = "auth_sessions"
+	// AuthSessionsInverseTable is the table name for the AuthSession entity.
+	// It exists in this package in order to avoid circular dependency with the "authsession" package.
+	AuthSessionsInverseTable = "auth_sessions"
+	// AuthSessionsColumn is the table column denoting the auth_sessions relation/edge.
+	AuthSessionsColumn = "user_id"
+	// CredentialsTable is the table that holds the credentials relation/edge.
+	CredentialsTable = "credentials"
+	// CredentialsInverseTable is the table name for the Credential entity.
+	// It exists in this package in order to avoid circular dependency with the "credential" package.
+	CredentialsInverseTable = "credentials"
+	// CredentialsColumn is the table column denoting the credentials relation/edge.
+	CredentialsColumn = "user_credentials"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -30,6 +53,8 @@ var Columns = []string{
 	FieldEmail,
 	FieldPassword,
 	FieldAvatar,
+	FieldFinishedRegistration,
+	FieldLastSignInAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -45,8 +70,8 @@ func ValidColumn(column string) bool {
 var (
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
-	// PasswordValidator is a validator for the "password" field. It is called by the builders before save.
-	PasswordValidator func(string) error
+	// DefaultFinishedRegistration holds the default value on creation for the "finished_registration" field.
+	DefaultFinishedRegistration bool
 )
 
 // OrderOption defines the ordering options for the User queries.
@@ -75,4 +100,49 @@ func ByPassword(opts ...sql.OrderTermOption) OrderOption {
 // ByAvatar orders the results by the avatar field.
 func ByAvatar(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAvatar, opts...).ToFunc()
+}
+
+// ByFinishedRegistration orders the results by the finished_registration field.
+func ByFinishedRegistration(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFinishedRegistration, opts...).ToFunc()
+}
+
+// ByLastSignInAt orders the results by the last_sign_in_at field.
+func ByLastSignInAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastSignInAt, opts...).ToFunc()
+}
+
+// ByAuthSessionsField orders the results by auth_sessions field.
+func ByAuthSessionsField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAuthSessionsStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByCredentialsCount orders the results by credentials count.
+func ByCredentialsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCredentialsStep(), opts...)
+	}
+}
+
+// ByCredentials orders the results by credentials terms.
+func ByCredentials(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCredentialsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newAuthSessionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AuthSessionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, false, AuthSessionsTable, AuthSessionsColumn),
+	)
+}
+func newCredentialsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CredentialsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CredentialsTable, CredentialsColumn),
+	)
 }

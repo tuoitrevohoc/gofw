@@ -1,5 +1,17 @@
 directive @goField(forceResolver: Boolean, name: String, omittable: Boolean) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @goModel(model: String, models: [String!], forceGenerate: Boolean) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+type AuthSession implements Node {
+  id: ID!
+  data: String!
+  userID: ID
+  user: User
+}
+type Credential implements Node {
+  id: ID!
+  publicKey: String!
+  data: String!
+  user: User!
+}
 """
 Define a Relay Cursor type:
 https://relay.dev/graphql/connections.htm#sec-Cursor
@@ -70,10 +82,18 @@ type Query {
     ids: [ID!]!
   ): [Node]!
 }
+"""
+The builtin Time type
+"""
+scalar Time
 type User implements Node {
   id: ID!
   name: String
   email: String!
-  password: String!
+  password: String
   avatar: String
+  finishedRegistration: Boolean!
+  lastSignInAt: Time
+  authSessions: AuthSession
+  credentials: [Credential!]
 }

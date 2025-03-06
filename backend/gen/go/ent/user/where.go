@@ -3,7 +3,10 @@
 package user
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/predicate"
 )
 
@@ -70,6 +73,16 @@ func Password(v string) predicate.User {
 // Avatar applies equality check predicate on the "avatar" field. It's identical to AvatarEQ.
 func Avatar(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAvatar, v))
+}
+
+// FinishedRegistration applies equality check predicate on the "finished_registration" field. It's identical to FinishedRegistrationEQ.
+func FinishedRegistration(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldFinishedRegistration, v))
+}
+
+// LastSignInAt applies equality check predicate on the "last_sign_in_at" field. It's identical to LastSignInAtEQ.
+func LastSignInAt(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLastSignInAt, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -267,6 +280,16 @@ func PasswordHasSuffix(v string) predicate.User {
 	return predicate.User(sql.FieldHasSuffix(FieldPassword, v))
 }
 
+// PasswordIsNil applies the IsNil predicate on the "password" field.
+func PasswordIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldPassword))
+}
+
+// PasswordNotNil applies the NotNil predicate on the "password" field.
+func PasswordNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldPassword))
+}
+
 // PasswordEqualFold applies the EqualFold predicate on the "password" field.
 func PasswordEqualFold(v string) predicate.User {
 	return predicate.User(sql.FieldEqualFold(FieldPassword, v))
@@ -350,6 +373,112 @@ func AvatarEqualFold(v string) predicate.User {
 // AvatarContainsFold applies the ContainsFold predicate on the "avatar" field.
 func AvatarContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldAvatar, v))
+}
+
+// FinishedRegistrationEQ applies the EQ predicate on the "finished_registration" field.
+func FinishedRegistrationEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldFinishedRegistration, v))
+}
+
+// FinishedRegistrationNEQ applies the NEQ predicate on the "finished_registration" field.
+func FinishedRegistrationNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldFinishedRegistration, v))
+}
+
+// LastSignInAtEQ applies the EQ predicate on the "last_sign_in_at" field.
+func LastSignInAtEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLastSignInAt, v))
+}
+
+// LastSignInAtNEQ applies the NEQ predicate on the "last_sign_in_at" field.
+func LastSignInAtNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldLastSignInAt, v))
+}
+
+// LastSignInAtIn applies the In predicate on the "last_sign_in_at" field.
+func LastSignInAtIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldLastSignInAt, vs...))
+}
+
+// LastSignInAtNotIn applies the NotIn predicate on the "last_sign_in_at" field.
+func LastSignInAtNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldLastSignInAt, vs...))
+}
+
+// LastSignInAtGT applies the GT predicate on the "last_sign_in_at" field.
+func LastSignInAtGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldLastSignInAt, v))
+}
+
+// LastSignInAtGTE applies the GTE predicate on the "last_sign_in_at" field.
+func LastSignInAtGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldLastSignInAt, v))
+}
+
+// LastSignInAtLT applies the LT predicate on the "last_sign_in_at" field.
+func LastSignInAtLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldLastSignInAt, v))
+}
+
+// LastSignInAtLTE applies the LTE predicate on the "last_sign_in_at" field.
+func LastSignInAtLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldLastSignInAt, v))
+}
+
+// LastSignInAtIsNil applies the IsNil predicate on the "last_sign_in_at" field.
+func LastSignInAtIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldLastSignInAt))
+}
+
+// LastSignInAtNotNil applies the NotNil predicate on the "last_sign_in_at" field.
+func LastSignInAtNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldLastSignInAt))
+}
+
+// HasAuthSessions applies the HasEdge predicate on the "auth_sessions" edge.
+func HasAuthSessions() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, AuthSessionsTable, AuthSessionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAuthSessionsWith applies the HasEdge predicate on the "auth_sessions" edge with a given conditions (other predicates).
+func HasAuthSessionsWith(preds ...predicate.AuthSession) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAuthSessionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCredentials applies the HasEdge predicate on the "credentials" edge.
+func HasCredentials() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CredentialsTable, CredentialsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCredentialsWith applies the HasEdge predicate on the "credentials" edge with a given conditions (other predicates).
+func HasCredentialsWith(preds ...predicate.Credential) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newCredentialsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

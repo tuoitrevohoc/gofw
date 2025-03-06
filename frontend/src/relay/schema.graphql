@@ -25,6 +25,26 @@ custom scalar types.
 """
 directive @specifiedBy(url: String!) on SCALAR
 
+type AuthnRegistrationResponse {
+  credentialCreation: String!
+}
+
+type AuthSession implements Node {
+  id: ID!
+  challenge: String!
+  replyingpartyid: String!
+  data: String!
+  userID: ID
+  user: User
+}
+
+type Credential implements Node {
+  id: ID!
+  publicKey: String!
+  data: String!
+  user: User!
+}
+
 """
 Define a Relay Cursor type:
 https://relay.dev/graphql/connections.htm#sec-Cursor
@@ -34,6 +54,8 @@ scalar Cursor
 type Mutation {
   signUp(input: SignUpInput!): User!
   signIn(input: SignInInput!): User!
+  beginAuthnRegistration(email: String!): AuthnRegistrationResponse!
+  finishAuthnRegistration(email: String!, response: String!): User!
 }
 
 """
@@ -98,12 +120,19 @@ input SignUpInput {
   password: String!
 }
 
+"""The builtin Time type"""
+scalar Time
+
 type User implements Node {
   id: ID!
   name: String
   email: String!
-  password: String!
+  password: String
   avatar: String
+  finishedRegistration: Boolean!
+  lastSignInAt: Time
+  authSessions: [AuthSession!]
+  credentials: [Credential!]
 }
 
 type Viewer {

@@ -3,6 +3,9 @@
 package ent
 
 import (
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/predicate"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 
 	"entgo.io/ent/dialect/sql"
@@ -13,8 +16,38 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 1)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 3)}
 	graph.Nodes[0] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   authsession.Table,
+			Columns: authsession.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: authsession.FieldID,
+			},
+		},
+		Type: "AuthSession",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			authsession.FieldData:   {Type: field.TypeString, Column: authsession.FieldData},
+			authsession.FieldUserID: {Type: field.TypeInt, Column: authsession.FieldUserID},
+		},
+	}
+	graph.Nodes[1] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   credential.Table,
+			Columns: credential.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: credential.FieldID,
+			},
+		},
+		Type: "Credential",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			credential.FieldPublicKey: {Type: field.TypeString, Column: credential.FieldPublicKey},
+			credential.FieldData:      {Type: field.TypeString, Column: credential.FieldData},
+		},
+	}
+	graph.Nodes[2] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -25,12 +58,62 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		Type: "User",
 		Fields: map[string]*sqlgraph.FieldSpec{
-			user.FieldName:     {Type: field.TypeString, Column: user.FieldName},
-			user.FieldEmail:    {Type: field.TypeString, Column: user.FieldEmail},
-			user.FieldPassword: {Type: field.TypeString, Column: user.FieldPassword},
-			user.FieldAvatar:   {Type: field.TypeString, Column: user.FieldAvatar},
+			user.FieldName:                 {Type: field.TypeString, Column: user.FieldName},
+			user.FieldEmail:                {Type: field.TypeString, Column: user.FieldEmail},
+			user.FieldPassword:             {Type: field.TypeString, Column: user.FieldPassword},
+			user.FieldAvatar:               {Type: field.TypeString, Column: user.FieldAvatar},
+			user.FieldFinishedRegistration: {Type: field.TypeBool, Column: user.FieldFinishedRegistration},
+			user.FieldLastSignInAt:         {Type: field.TypeTime, Column: user.FieldLastSignInAt},
 		},
 	}
+	graph.MustAddE(
+		"user",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: true,
+			Table:   authsession.UserTable,
+			Columns: []string{authsession.UserColumn},
+			Bidi:    false,
+		},
+		"AuthSession",
+		"User",
+	)
+	graph.MustAddE(
+		"user",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   credential.UserTable,
+			Columns: []string{credential.UserColumn},
+			Bidi:    false,
+		},
+		"Credential",
+		"User",
+	)
+	graph.MustAddE(
+		"auth_sessions",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.AuthSessionsTable,
+			Columns: []string{user.AuthSessionsColumn},
+			Bidi:    false,
+		},
+		"User",
+		"AuthSession",
+	)
+	graph.MustAddE(
+		"credentials",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CredentialsTable,
+			Columns: []string{user.CredentialsColumn},
+			Bidi:    false,
+		},
+		"User",
+		"Credential",
+	)
 	return graph
 }()
 
@@ -38,6 +121,134 @@ var schemaGraph = func() *sqlgraph.Schema {
 // All update, update-one and query builders implement this interface.
 type predicateAdder interface {
 	addPredicate(func(s *sql.Selector))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (asq *AuthSessionQuery) addPredicate(pred func(s *sql.Selector)) {
+	asq.predicates = append(asq.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the AuthSessionQuery builder.
+func (asq *AuthSessionQuery) Filter() *AuthSessionFilter {
+	return &AuthSessionFilter{config: asq.config, predicateAdder: asq}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *AuthSessionMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the AuthSessionMutation builder.
+func (m *AuthSessionMutation) Filter() *AuthSessionFilter {
+	return &AuthSessionFilter{config: m.config, predicateAdder: m}
+}
+
+// AuthSessionFilter provides a generic filtering capability at runtime for AuthSessionQuery.
+type AuthSessionFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *AuthSessionFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[0].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *AuthSessionFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(authsession.FieldID))
+}
+
+// WhereData applies the entql string predicate on the data field.
+func (f *AuthSessionFilter) WhereData(p entql.StringP) {
+	f.Where(p.Field(authsession.FieldData))
+}
+
+// WhereUserID applies the entql int predicate on the user_id field.
+func (f *AuthSessionFilter) WhereUserID(p entql.IntP) {
+	f.Where(p.Field(authsession.FieldUserID))
+}
+
+// WhereHasUser applies a predicate to check if query has an edge user.
+func (f *AuthSessionFilter) WhereHasUser() {
+	f.Where(entql.HasEdge("user"))
+}
+
+// WhereHasUserWith applies a predicate to check if query has an edge user with a given conditions (other predicates).
+func (f *AuthSessionFilter) WhereHasUserWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("user", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
+func (cq *CredentialQuery) addPredicate(pred func(s *sql.Selector)) {
+	cq.predicates = append(cq.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the CredentialQuery builder.
+func (cq *CredentialQuery) Filter() *CredentialFilter {
+	return &CredentialFilter{config: cq.config, predicateAdder: cq}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *CredentialMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the CredentialMutation builder.
+func (m *CredentialMutation) Filter() *CredentialFilter {
+	return &CredentialFilter{config: m.config, predicateAdder: m}
+}
+
+// CredentialFilter provides a generic filtering capability at runtime for CredentialQuery.
+type CredentialFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *CredentialFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[1].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *CredentialFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(credential.FieldID))
+}
+
+// WherePublicKey applies the entql string predicate on the public_key field.
+func (f *CredentialFilter) WherePublicKey(p entql.StringP) {
+	f.Where(p.Field(credential.FieldPublicKey))
+}
+
+// WhereData applies the entql string predicate on the data field.
+func (f *CredentialFilter) WhereData(p entql.StringP) {
+	f.Where(p.Field(credential.FieldData))
+}
+
+// WhereHasUser applies a predicate to check if query has an edge user.
+func (f *CredentialFilter) WhereHasUser() {
+	f.Where(entql.HasEdge("user"))
+}
+
+// WhereHasUserWith applies a predicate to check if query has an edge user with a given conditions (other predicates).
+func (f *CredentialFilter) WhereHasUserWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("user", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
 }
 
 // addPredicate implements the predicateAdder interface.
@@ -69,7 +280,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[0].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -98,4 +309,42 @@ func (f *UserFilter) WherePassword(p entql.StringP) {
 // WhereAvatar applies the entql string predicate on the avatar field.
 func (f *UserFilter) WhereAvatar(p entql.StringP) {
 	f.Where(p.Field(user.FieldAvatar))
+}
+
+// WhereFinishedRegistration applies the entql bool predicate on the finished_registration field.
+func (f *UserFilter) WhereFinishedRegistration(p entql.BoolP) {
+	f.Where(p.Field(user.FieldFinishedRegistration))
+}
+
+// WhereLastSignInAt applies the entql time.Time predicate on the last_sign_in_at field.
+func (f *UserFilter) WhereLastSignInAt(p entql.TimeP) {
+	f.Where(p.Field(user.FieldLastSignInAt))
+}
+
+// WhereHasAuthSessions applies a predicate to check if query has an edge auth_sessions.
+func (f *UserFilter) WhereHasAuthSessions() {
+	f.Where(entql.HasEdge("auth_sessions"))
+}
+
+// WhereHasAuthSessionsWith applies a predicate to check if query has an edge auth_sessions with a given conditions (other predicates).
+func (f *UserFilter) WhereHasAuthSessionsWith(preds ...predicate.AuthSession) {
+	f.Where(entql.HasEdgeWith("auth_sessions", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasCredentials applies a predicate to check if query has an edge credentials.
+func (f *UserFilter) WhereHasCredentials() {
+	f.Where(entql.HasEdge("credentials"))
+}
+
+// WhereHasCredentialsWith applies a predicate to check if query has an edge credentials with a given conditions (other predicates).
+func (f *UserFilter) WhereHasCredentialsWith(preds ...predicate.Credential) {
+	f.Where(entql.HasEdgeWith("credentials", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
 }

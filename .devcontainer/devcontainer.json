@@ -12,7 +12,12 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": ["esbenp.prettier-vscode", "meta.relay", "golang.go"],
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "meta.relay",
+        "golang.go",
+        "ckolkman.vscode-postgres"
+      ],
       "settings": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode",
