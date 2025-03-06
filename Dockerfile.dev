@@ -1,0 +1,63 @@
+FROM ubuntu:22.04 AS builder
+
+WORKDIR /install
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3 \
+    sudo \
+    curl \
+    git \
+    && apt-get install -y wget unzip \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+
+ENV PATH="/root/.cargo/bin:${PATH}"
+ENV WATCHMAN_VERSION_OVERRIDE=v2025.03.03.00
+
+RUN wget https://github.com/facebook/watchman/archive/refs/tags/v2025.03.03.00.zip && \
+    unzip v2025.03.03.00.zip && \
+    cd watchman-2025.03.03.00 && \
+    apt-get update && \
+    ./install-system-packages.sh && \
+    ./autogen.sh
+
+# RUN cp -r /install/built/bin/* /usr/bin && \
+#     cp -r /install/built/lib/* /usr/local/lib
+
+# Create necessary directories for Watchman
+# RUN mkdir -p /usr/local/var/run/watchman && chmod 777 /usr/local/var/run/watchman
+
+FROM mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libboost-context-dev \ 
+    libgflags-dev \
+    libevent-dev \ 
+    libsnappy-dev \
+    libdouble-conversion-dev \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /install/watchman-2025.03.03.00/built/bin /usr/bin
+COPY --from=builder /install/watchman-2025.03.03.00/built/lib /usr/local/lib
+
+RUN mkdir -p /usr/local/var/run/watchman && chmod 777 /usr/local/var/run/watchman
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -9,15 +9,51 @@ import (
 	"fmt"
 
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	graphql1 "github.com/tuoitrevohoc/gofw/backend/gen/go/graphql"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/graphql/model"
 )
 
-// CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error) {
-	panic(fmt.Errorf("not implemented: CreateUser - createUser"))
+// SignUp is the resolver for the signUp field.
+func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) (*ent.User, error) {
+	panic(fmt.Errorf("not implemented: SignUp - signUp"))
+}
+
+// SignIn is the resolver for the signIn field.
+func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*ent.User, error) {
+	hasUser, err := r.client.User.Query().Where(
+		user.Email(input.Email),
+	).Exist(ctx)
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	if hasUser {
+		return nil, fmt.Errorf("user already exists")
+	}
+
+	user, err := r.client.User.Create().SetEmail(input.Email).SetPassword(input.Password).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // Mutation returns graphql1.MutationResolver implementation.
 func (r *Resolver) Mutation() graphql1.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error) {
+	panic(fmt.Errorf("not implemented: CreateUser - createUser"))
+}
+*/

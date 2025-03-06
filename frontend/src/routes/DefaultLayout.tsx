@@ -7,7 +7,7 @@ import {
   Drawer,
 } from "@mui/material";
 import { Outlet, useLocation } from "react-router-dom";
-import NavigationBar from "../../components/navigation/NavigationBar";
+import NavigationBar from "../components/navigation/NavigationBar";
 import { Link } from "react-router";
 
 export interface MenuItem {

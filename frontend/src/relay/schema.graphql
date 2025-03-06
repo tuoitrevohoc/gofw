@@ -25,12 +25,6 @@ custom scalar types.
 """
 directive @specifiedBy(url: String!) on SCALAR
 
-input CreateUserInput {
-  name: String!
-  email: String!
-  password: String!
-}
-
 """
 Define a Relay Cursor type:
 https://relay.dev/graphql/connections.htm#sec-Cursor
@@ -38,7 +32,8 @@ https://relay.dev/graphql/connections.htm#sec-Cursor
 scalar Cursor
 
 type Mutation {
-  createUser(input: CreateUserInput!): User!
+  signUp(input: SignUpInput!): User!
+  signIn(input: SignInInput!): User!
 }
 
 """
@@ -93,11 +88,25 @@ type Query {
   ): [Node]!
 }
 
+input SignInInput {
+  email: String!
+  password: String!
+}
+
+input SignUpInput {
+  email: String!
+  password: String!
+}
+
 type User implements Node {
   id: ID!
   name: String!
   email: String!
   password: String!
   avatar: String!
+}
+
+type Viewer {
+  user: User
 }
 

@@ -1,8 +1,8 @@
-version: '3.8'
+version: "3.8"
 
 services:
   backend:
-    image: mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm
+    image: banhtieu/watchman-dev-container:latest
     ports:
       - "3000:3000"
       - "2112:2112"
@@ -11,7 +11,7 @@ services:
     volumes:
       - .:/workspace
     working_dir: /workspace/frontend
-    command: sh -c "npm install && npm run dev:relay"
+    command: sh -c "mkdir -p /usr/local/var/run/watchman/root-state && npm install && npm run dev"
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -42,8 +42,8 @@ services:
   statsd_exporter:
     image: prom/statsd-exporter:latest
     ports:
-      - "9125:9125/udp"  # StatsD input
-      - "9102:9102"      # Prometheus metrics
+      - "9125:9125/udp" # StatsD input
+      - "9102:9102" # Prometheus metrics
     volumes:
       - ./config/statsd:/etc/statsd-exporter
     restart: unless-stopped
@@ -56,10 +56,10 @@ services:
       - ./config/prometheus:/etc/prometheus
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.listen-address=0.0.0.0:9090'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.listen-address=0.0.0.0:9090"
+      - "--web.enable-lifecycle"
     restart: unless-stopped
 
   loki:

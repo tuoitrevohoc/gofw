@@ -27,4 +27,4 @@ models:
       - github.com/99designs/gqlgen/graphql.Int32
   Node:
     model:
-      - "github.com/tuoitrevohoc/gofw/backend/gen/go/ent.Noder" 
+      - "github.com/tuoitrevohoc/gofw/backend/gen/go/ent.Noder"

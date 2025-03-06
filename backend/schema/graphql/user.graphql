@@ -1,9 +1,18 @@
-extend type Mutation {
-    createUser(input: CreateUserInput!): User!
+type Viewer {
+  user: User
 }
 
-input CreateUserInput {
-    name: String!
-    email: String!
-    password: String!
+input SignUpInput {
+  email: String!
+  password: String!
+}
+
+input SignInInput {
+  email: String!
+  password: String!
+}
+
+extend type Mutation {
+  signUp(input: SignUpInput!): User!
+  signIn(input: SignInInput!): User!
 }
