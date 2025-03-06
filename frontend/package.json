@@ -25,7 +25,8 @@
     "react-relay": "^16.2.0",
     "react-router": "^7.2.0",
     "react-router-dom": "^7.2.0",
-    "relay-runtime": "^16.2.0"
+    "relay-runtime": "^16.2.0",
+    "vite-plugin-relay-lite": "^0.10.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

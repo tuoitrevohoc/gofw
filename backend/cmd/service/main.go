@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/tuoitrevohoc/gofw/backend/internal/config"
 	"github.com/tuoitrevohoc/gofw/backend/internal/db"
@@ -22,6 +24,11 @@ func main() {
 	entClient, err := db.NewEntClient(cfg.Db.Url)
 	if err != nil {
 		logger.Fatal("Failed to connect to database", zap.Error(err))
+	}
+
+	// migrate database
+	if err := entClient.Schema.Create(context.Background()); err != nil {
+		logger.Fatal("Failed to create schema", zap.Error(err))
 	}
 
 	graphqlHandler := graphql.NewHandler(entClient)

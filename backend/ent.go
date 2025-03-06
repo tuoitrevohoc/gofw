@@ -12,6 +12,7 @@ import (
 
 func main() {
 	ex, err := entgql.NewExtension(
+		entgql.WithRelaySpec(true),
 		entgql.WithConfigPath("gqlgen.yml"),
 		entgql.WithSchemaPath("schema/graphql/ent.graphql"),
 		entgql.WithSchemaGenerator(),

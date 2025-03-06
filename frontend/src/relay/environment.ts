@@ -7,16 +7,16 @@ import {
   GraphQLResponse,
   RequestParameters,
   Variables,
-} from 'relay-runtime';
+} from "relay-runtime";
 
 const fetchQuery: FetchFunction = async (
   operation: RequestParameters,
-  variables: Variables,
+  variables: Variables
 ): Promise<GraphQLResponse> => {
-  const response = await fetch('/graphql', {
-    method: 'POST',
+  const response = await fetch("/graphql", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       query: operation.text,
@@ -32,4 +32,4 @@ const environment = new Environment({
   store: new Store(new RecordSource()),
 });
 
-export default environment; 
+export default environment;

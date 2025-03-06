@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
+import useSignUpMutation from "../../relay/mutations/signUp";
 
 function isValidateForm(
   email: string,
@@ -26,6 +27,25 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [commitSignUp, loading] = useSignUpMutation();
+
+  function handleSignUp() {
+    commitSignUp({
+      variables: {
+        input: {
+          email,
+          password,
+        },
+      },
+      onCompleted: (data) => {
+        console.log(data);
+      },
+      onError: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
   return (
     <Stack direction="column" gap={1.5} alignItems="center" width="100%">
       <Typography variant="h5">Register</Typography>
@@ -44,9 +64,7 @@ export default function RegisterPage() {
           label="Email"
         />
         <Button
-          disabled={
-            !isValidateForm(email, password, confirmPassword, false)
-          }
+          disabled={!isValidateForm(email, password, confirmPassword, false)}
           fullWidth
           variant="contained"
           size="large"
@@ -58,29 +76,28 @@ export default function RegisterPage() {
             Or use a password
           </Typography>
         </Divider>
-          <>
-            <TextField
-              fullWidth
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              label="Password"
-            />
-            <TextField
-              fullWidth
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              label="Confirm Password"
-            />
-          </>
+        <>
+          <TextField
+            fullWidth
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            label="Password"
+          />
+          <TextField
+            fullWidth
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            label="Confirm Password"
+          />
+        </>
         <Button
-          disabled={
-            !isValidateForm(email, password, confirmPassword, true)
-          }
+          disabled={!isValidateForm(email, password, confirmPassword, true)}
           fullWidth
           variant="outlined"
           size="large"
+          onClick={handleSignUp}
         >
           Register
         </Button>

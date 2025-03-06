@@ -12,10 +12,14 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": ["esbenp.prettier-vscode", "meta.relay"],
+      "extensions": ["esbenp.prettier-vscode", "meta.relay", "golang.go"],
       "settings": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[go]": {
+          "editor.defaultFormatter": "golang.go",
+          "editor.formatOnSave": true
+        },
         "relay.pathToConfig": "./frontend/relay.config.json",
         "relay.rootDirectory": "./frontend",
         "relay.autoStartCompiler": true

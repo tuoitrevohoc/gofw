@@ -72,8 +72,8 @@ type Query {
 }
 type User implements Node {
   id: ID!
-  name: String!
+  name: String
   email: String!
   password: String!
-  avatar: String!
+  avatar: String
 }
