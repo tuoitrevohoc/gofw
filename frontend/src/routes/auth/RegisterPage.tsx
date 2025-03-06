@@ -3,13 +3,14 @@ import {
   Divider,
   Link,
   Stack,
-  Switch,
   TextField,
   Typography,
+  Alert,
 } from "@mui/material";
 import { useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import useSignUpMutation from "../../relay/mutations/signUp";
+import getErrorMessage from "../../relay/getErrorMessage";
 
 function isValidateForm(
   email: string,
@@ -18,18 +19,25 @@ function isValidateForm(
   usePassword: boolean
 ) {
   if (usePassword) {
-    return password.length > 0 && confirmPassword.length > 0;
+    return (
+      password.length > 0 &&
+      confirmPassword.length > 0 &&
+      password === confirmPassword
+    );
   }
   return email.length > 0;
 }
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [commitSignUp, loading] = useSignUpMutation();
 
   function handleSignUp() {
+    setError(null);
     commitSignUp({
       variables: {
         input: {
@@ -37,11 +45,12 @@ export default function RegisterPage() {
           password,
         },
       },
-      onCompleted: (data) => {
-        console.log(data);
+      onCompleted: () => {
+        navigate("/");
       },
       onError: (error) => {
-        console.error(error);
+        const errorMessage = getErrorMessage(error);
+        setError(errorMessage);
       },
     });
   }
@@ -55,6 +64,11 @@ export default function RegisterPage() {
           Sign in
         </Link>
       </Typography>
+      {error && (
+        <Alert severity="error" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      )}
       <Stack direction="column" gap={1.5} width="100%">
         <TextField
           fullWidth
@@ -89,6 +103,7 @@ export default function RegisterPage() {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            error={password !== confirmPassword}
             label="Confirm Password"
           />
         </>
@@ -98,6 +113,7 @@ export default function RegisterPage() {
           variant="outlined"
           size="large"
           onClick={handleSignUp}
+          loading={loading}
         >
           Register
         </Button>
