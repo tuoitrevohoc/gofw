@@ -6,13 +6,11 @@ on:
       - main  # Change this to your default branch if it's different
 
 jobs:
-  deploy:
+  build-frontend:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
-
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -31,12 +29,39 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}/gofw-frontend:latest
 
+  build-backend:
+    permissions:
+      contents: write
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build Backend
         uses: docker/build-push-action@v2
         with:
           context: ./backend
           push: true
           tags: ghcr.io/${{ github.repository }}/gofw-backend:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-frontend, build-backend]  # Ensure this job runs after both builds
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Copy compose.${ENV}.yaml and config folder
         run: |
