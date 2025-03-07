@@ -9,6 +9,7 @@ services:
     environment:
       - ENV=${ENV}
       - DB_URL=${DB_URL}
+      - DOMAIN=${DOMAIN}
     volumes:
       - .:/workspace
     logging:
