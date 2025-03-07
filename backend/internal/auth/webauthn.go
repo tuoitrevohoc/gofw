@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
@@ -81,5 +82,6 @@ func convertToSessionData(session *ent.AuthSession) (*webauthn.SessionData, erro
 
 	// decode challenge
 	result.Challenge = base64.URLEncoding.EncodeToString([]byte(result.Challenge))
+	result.Challenge = strings.TrimRight(result.Challenge, "=")
 	return &result, nil
 }
