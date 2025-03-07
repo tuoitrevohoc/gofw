@@ -79,6 +79,7 @@ func ServiceManagerMiddleware(manager *ServiceManager) func(http.Handler) http.H
 			// Add panic recovery
 			defer func() {
 				if err := recover(); err != nil {
+					manager.Statsd().Incr("http_server_panic", []string{}, 1)
 					requestLogger.Error("panic occurred during request handling",
 						zap.Any("error", err),
 						zap.String("request_id", requestID),

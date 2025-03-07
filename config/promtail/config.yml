@@ -15,7 +15,7 @@ scrape_configs:
         refresh_interval: 5s
         filters:
           - name: name
-            values: ['backend*', 'postgres*', 'redis*']
+            values: ['backend*', 'postgres*', 'redis*', 'frontend*', 'grafana*', 'prometheus*']
     relabel_configs:
       - source_labels: ['__meta_docker_container_name']
         regex: '/(.*)'

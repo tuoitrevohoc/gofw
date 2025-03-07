@@ -21,6 +21,8 @@ type Authenticator struct {
 }
 
 func NewPasskeyAuthenticator(manager *gofw.ServiceManager, ent *ent.Client, domain string) *Authenticator {
+	manager.Logger().Info("Initializing passkey authenticator", zap.String("domain", domain))
+	
 	webauthn, err := webauthn.New(&webauthn.Config{
 		RPID:          domain,
 		RPDisplayName: "Gofw",
