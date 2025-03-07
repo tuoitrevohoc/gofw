@@ -23,4 +23,22 @@ scrape_configs:
       - source_labels: ['__meta_docker_container_log_stream']
         target_label: 'stream'
       - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
-        target_label: 'service' 
+        target_label: 'service'
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            ts: ts
+            stacktrace: stacktrace
+            error: error
+            request_id: request_id
+            caller: caller
+      - labels:
+          level:
+          msg:
+          ts: 
+          stacktrace:
+          error:
+          request_id:
+          caller:
