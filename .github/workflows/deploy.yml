@@ -83,7 +83,7 @@ jobs:
           script: |
             #!/bin/bash
 
-            CD /deploy
+            cd /deploy
 
             docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
 
