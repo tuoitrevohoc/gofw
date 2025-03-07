@@ -1,0 +1,45 @@
+name: Deploy to a server
+
+on:
+  workflow_run:
+    workflows: ["docker-frontend", "docker-backend"]  # Names of the workflows to wait for
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # Only run if both workflows succeeded
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Copy compose.${ENV}.yaml and config folder
+        run: |
+          scp -o StrictHostKeyChecking=no -i ${{ secrets.SSH_DEPLOY_KEY }} compose.${{ secrets.ENV }}.yaml ${{ secrets.SSH_DEPLOY_USER }}@${{ secrets.SSH_DEPLOY_HOST }}:/deploy/docker-compose.yaml
+          scp -o StrictHostKeyChecking=no -i ${{ secrets.SSH_DEPLOY_KEY }} -r config/ ${{ secrets.SSH_DEPLOY_USER }}@${{ secrets.SSH_DEPLOY_HOST }}:/deploy/config/
+          
+
+      - name: Execute deployment script
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.SSH_DEPLOY_HOST }}  # Your Vultr server IP
+          username: ${{ secrets.SSH_DEPLOY_USER }}  # Your SSH username
+          key: ${{ secrets.SSH_DEPLOY_KEY }}  # Your private SSH key
+          script: |
+            #!/bin/bash
+
+            CD /deploy
+
+            export DOMAIN=${{ secrets.DOMAIN }}
+            export GRAFANA_DOMAIN=${{ secrets.GRAFANA_DOMAIN }}
+            export PROMETHEUS_DOMAIN=${{ secrets.PROMETHEUS_DOMAIN }}
+            export ENV=${{ secrets.ENV }}
+            export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            export DB_URL="postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}?sslmode=disable"
+            
+            # copy compose.${ENV}.yaml from host machine to ssh to docker-compose.yaml
+            docker-compose -f docker-compose.yaml up -d --build

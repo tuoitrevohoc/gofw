@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   backend:
-    build: ./backend
+    image: ghcr.io/tuoitrevohoc/gofw/gofw-backend:latest
     ports:
       - 8000
       - 2112
@@ -17,7 +17,7 @@ services:
         max-size: "10m"
         max-file: "3"
   frontend:
-    build: ./frontend
+    image: ghcr.io/tuoitrevohoc/gofw/gofw-frontend:latest
     ports:
       - "443:443"
       - "80:80"
