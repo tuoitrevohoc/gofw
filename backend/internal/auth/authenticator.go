@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -20,6 +21,11 @@ type Authenticator struct {
 }
 
 func NewPasskeyAuthenticator(manager *gofw.ServiceManager, ent *ent.Client, domain string, origin string) *Authenticator {
+
+	if len(origin) == 0 {
+		origin = fmt.Sprintf("https://%s", domain)
+	}
+
 	manager.Logger().
 		Info("Initializing passkey authenticator",
 			zap.String("domain", domain),
