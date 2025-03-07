@@ -32,7 +32,7 @@ func main() {
 		logger.Fatal("Failed to create schema", zap.Error(err))
 	}
 
-	authenticator := auth.NewPasskeyAuthenticator(manager, entClient, cfg.Domain)
+	authenticator := auth.NewPasskeyAuthenticator(manager, entClient, cfg.Domain, cfg.Origin)
 	graphqlHandler := resolvers.NewHandler(entClient, authenticator)
 
 	server := gofw.NewHttpServer(manager, cfg.Port)
