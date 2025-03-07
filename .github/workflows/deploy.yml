@@ -70,7 +70,7 @@ jobs:
           EOF
           chmod 600 /tmp/key
           scp -o StrictHostKeyChecking=no -i /tmp/key compose.${{ secrets.ENV }}.yaml ${{ secrets.SSH_DEPLOY_USER }}@${{ secrets.SSH_DEPLOY_HOST }}:/deploy/docker-compose.yaml
-          scp -o StrictHostKeyChecking=no -i /tmp/key -r config/ ${{ secrets.SSH_DEPLOY_USER }}@${{ secrets.SSH_DEPLOY_HOST }}:/deploy/config/
+          scp -o StrictHostKeyChecking=no -i /tmp/key -r config/ ${{ secrets.SSH_DEPLOY_USER }}@${{ secrets.SSH_DEPLOY_HOST }}:/deploy/
           rm /tmp/key
           
 
