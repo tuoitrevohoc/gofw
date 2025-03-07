@@ -6,8 +6,12 @@ on:
       - main  # Change this to your default branch if it's different
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
+
+     permissions:
+      contents: write
+      packages: write
 
     steps:
       - name: Checkout code
