@@ -10,7 +10,7 @@ services:
       - ENV=${ENV}
       - DB_URL=${DB_URL}
       - DOMAIN=${DOMAIN}
-      - ORIGIN=https://${ORIGIN}
+      - ORIGIN=https://${DOMAIN}
     volumes:
       - .:/workspace
     logging:
