@@ -96,5 +96,4 @@ jobs:
             export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             export DB_URL="postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}?sslmode=disable"
             
-            # copy compose.${ENV}.yaml from host machine to ssh to docker-compose.yaml
-            docker-compose -f docker-compose.yaml up -d --build
+            docker compose -f docker-compose.yaml up -d --build
