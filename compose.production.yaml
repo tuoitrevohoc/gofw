@@ -28,6 +28,7 @@ services:
       - PROMETHEUS_DOMAIN=${PROMETHEUS_DOMAIN}
     volumes:
       - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
     logging:
       driver: "json-file"
       options:
@@ -119,3 +120,4 @@ volumes:
   prometheus_data:
   loki_data:
   grafana_data:
+  caddy_data:
