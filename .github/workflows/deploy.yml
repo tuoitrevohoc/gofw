@@ -65,8 +65,10 @@ jobs:
 
       - name: Copy compose.${ENV}.yaml and config folder
         run: |
-          scp -o StrictHostKeyChecking=no -i ${{ secrets.SSH_DEPLOY_KEY }} compose.${{ secrets.ENV }}.yaml ${{ secrets.SSH_DEPLOY_USER }}@${{ secrets.SSH_DEPLOY_HOST }}:/deploy/docker-compose.yaml
-          scp -o StrictHostKeyChecking=no -i ${{ secrets.SSH_DEPLOY_KEY }} -r config/ ${{ secrets.SSH_DEPLOY_USER }}@${{ secrets.SSH_DEPLOY_HOST }}:/deploy/config/
+          echo ${{ secrets.SSH_DEPLOY_KEY }} >> /tmp/key
+          scp -o StrictHostKeyChecking=no -i /tmp/key compose.${{ secrets.ENV }}.yaml ${{ secrets.SSH_DEPLOY_USER }}@${{ secrets.SSH_DEPLOY_HOST }}:/deploy/docker-compose.yaml
+          scp -o StrictHostKeyChecking=no -i /tmp/key -r config/ ${{ secrets.SSH_DEPLOY_USER }}@${{ secrets.SSH_DEPLOY_HOST }}:/deploy/config/
+          rm /tmp/key
           
 
       - name: Execute deployment script
