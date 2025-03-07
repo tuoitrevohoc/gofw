@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -19,11 +20,11 @@ type Authenticator struct {
 	webauthn *webauthn.WebAuthn
 }
 
-func NewPasskeyAuthenticator(manager *gofw.ServiceManager, ent *ent.Client) *Authenticator {
+func NewPasskeyAuthenticator(manager *gofw.ServiceManager, ent *ent.Client, domain string) *Authenticator {
 	webauthn, err := webauthn.New(&webauthn.Config{
-		RPID:          "localhost",
+		RPID:          domain,
 		RPDisplayName: "Gofw",
-		RPOrigins:     []string{"http://localhost:3000"},
+		RPOrigins:     []string{fmt.Sprintf("https://%s", domain)},
 		Timeouts: webauthn.TimeoutsConfig{
 			Registration: webauthn.TimeoutConfig{
 				Enforce:    true,

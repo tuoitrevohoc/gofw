@@ -7,13 +7,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-type DbConfig struct {
-	Url string `mapstructure:"url"`
-}
-
 type AppConfig struct {
-	Db   DbConfig `mapstructure:"db"`
-	Port string   `mapstructure:"port"`
+	DbUrl string `mapstructure:"db_url"`
+	Port  string `mapstructure:"port"`
+	Domain string `mapstructure:"domain"`
 }
 
 func LoadAppConfig() (*AppConfig, error) {
@@ -27,8 +24,6 @@ func LoadAppConfig() (*AppConfig, error) {
 	viper.AddConfigPath("./config")
 	viper.AddConfigPath("../../config")
 
-	viper.AutomaticEnv()
-
 	var c AppConfig
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -37,6 +32,8 @@ func LoadAppConfig() (*AppConfig, error) {
 		}
 		return nil, fmt.Errorf("error reading config file: %w", err)
 	}
+
+	viper.AutomaticEnv()
 
 	if err := viper.Unmarshal(&c); err != nil {
 		return nil, fmt.Errorf("unable to decode config into struct: %w", err)

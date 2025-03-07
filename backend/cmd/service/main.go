@@ -22,7 +22,7 @@ func main() {
 		logger.Fatal("Failed to get app config", zap.Error(err))
 	}
 
-	entClient, err := db.NewEntClient(cfg.Db.Url)
+	entClient, err := db.NewEntClient(cfg.DbUrl)
 	if err != nil {
 		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
@@ -32,7 +32,7 @@ func main() {
 		logger.Fatal("Failed to create schema", zap.Error(err))
 	}
 
-	authenticator := auth.NewPasskeyAuthenticator(manager, entClient)
+	authenticator := auth.NewPasskeyAuthenticator(manager, entClient, cfg.Domain)
 	graphqlHandler := resolvers.NewHandler(entClient, authenticator)
 
 	server := gofw.NewHttpServer(manager, cfg.Port)
