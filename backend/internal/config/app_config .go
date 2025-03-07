@@ -27,6 +27,8 @@ func LoadAppConfig() (*AppConfig, error) {
 	viper.AddConfigPath("./config")
 	viper.AddConfigPath("../../config")
 
+	viper.AutomaticEnv()
+
 	var c AppConfig
 
 	if err := viper.ReadInConfig(); err != nil {

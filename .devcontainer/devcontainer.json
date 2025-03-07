@@ -16,7 +16,8 @@
         "esbenp.prettier-vscode",
         "meta.relay",
         "golang.go",
-        "ckolkman.vscode-postgres"
+        "ckolkman.vscode-postgres",
+        "ms-azuretools.vscode-docker"
       ],
       "settings": {
         "editor.formatOnSave": true,
