@@ -15,6 +15,7 @@ import {
   useFinishAuthnRegistrationMutation,
 } from "../../relay/mutations/signUp";
 import getErrorMessage from "../../relay/getErrorMessage";
+import { handleLogin } from "../../auth";
 
 function isValidateForm(
   email: string,
@@ -81,9 +82,6 @@ export default function RegisterPage() {
 
       const credential = await navigator.credentials.create(creatorOptions);
 
-      console.log(credential);
-      console.log(JSON.stringify(credential));
-
       commitFinishAuthnRegistration({
         variables: {
           email,
@@ -91,7 +89,8 @@ export default function RegisterPage() {
             credential as unknown as PublicKeyCredential
           ),
         },
-        onCompleted: () => {
+        onCompleted: (data) => {
+          handleLogin(data.finishAuthnRegistration);
           navigate("/");
         },
         onError,
@@ -119,7 +118,8 @@ export default function RegisterPage() {
           password,
         },
       },
-      onCompleted: () => {
+      onCompleted: (response) => {
+        handleLogin(response.signUp);
         navigate("/");
       },
       onError,

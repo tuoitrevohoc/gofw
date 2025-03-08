@@ -15,21 +15,24 @@ import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/predicate"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
 
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx                  *QueryContext
-	order                []user.OrderOption
-	inters               []Interceptor
-	predicates           []predicate.User
-	withAuthSessions     *AuthSessionQuery
-	withCredentials      *CredentialQuery
-	modifiers            []func(*sql.Selector)
-	loadTotal            []func(context.Context, []*User) error
-	withNamedCredentials map[string]*CredentialQuery
+	ctx                   *QueryContext
+	order                 []user.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.User
+	withAuthSessions      *AuthSessionQuery
+	withCredentials       *CredentialQuery
+	withAccessTokens      *RefreshTokenQuery
+	modifiers             []func(*sql.Selector)
+	loadTotal             []func(context.Context, []*User) error
+	withNamedCredentials  map[string]*CredentialQuery
+	withNamedAccessTokens map[string]*RefreshTokenQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -103,6 +106,28 @@ func (uq *UserQuery) QueryCredentials() *CredentialQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(credential.Table, credential.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.CredentialsTable, user.CredentialsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAccessTokens chains the current query on the "access_tokens" edge.
+func (uq *UserQuery) QueryAccessTokens() *RefreshTokenQuery {
+	query := (&RefreshTokenClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(refreshtoken.Table, refreshtoken.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AccessTokensTable, user.AccessTokensColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -304,6 +329,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		predicates:       append([]predicate.User{}, uq.predicates...),
 		withAuthSessions: uq.withAuthSessions.Clone(),
 		withCredentials:  uq.withCredentials.Clone(),
+		withAccessTokens: uq.withAccessTokens.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -329,6 +355,17 @@ func (uq *UserQuery) WithCredentials(opts ...func(*CredentialQuery)) *UserQuery 
 		opt(query)
 	}
 	uq.withCredentials = query
+	return uq
+}
+
+// WithAccessTokens tells the query-builder to eager-load the nodes that are connected to
+// the "access_tokens" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithAccessTokens(opts ...func(*RefreshTokenQuery)) *UserQuery {
+	query := (&RefreshTokenClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withAccessTokens = query
 	return uq
 }
 
@@ -410,9 +447,10 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			uq.withAuthSessions != nil,
 			uq.withCredentials != nil,
+			uq.withAccessTokens != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -449,10 +487,24 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := uq.withAccessTokens; query != nil {
+		if err := uq.loadAccessTokens(ctx, query, nodes,
+			func(n *User) { n.Edges.AccessTokens = []*RefreshToken{} },
+			func(n *User, e *RefreshToken) { n.Edges.AccessTokens = append(n.Edges.AccessTokens, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range uq.withNamedCredentials {
 		if err := uq.loadCredentials(ctx, query, nodes,
 			func(n *User) { n.appendNamedCredentials(name) },
 			func(n *User, e *Credential) { n.appendNamedCredentials(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range uq.withNamedAccessTokens {
+		if err := uq.loadAccessTokens(ctx, query, nodes,
+			func(n *User) { n.appendNamedAccessTokens(name) },
+			func(n *User, e *RefreshToken) { n.appendNamedAccessTokens(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -517,6 +569,37 @@ func (uq *UserQuery) loadCredentials(ctx context.Context, query *CredentialQuery
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_credentials" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadAccessTokens(ctx context.Context, query *RefreshTokenQuery, nodes []*User, init func(*User), assign func(*User, *RefreshToken)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.RefreshToken(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.AccessTokensColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_access_tokens
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_access_tokens" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_access_tokens" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -618,6 +701,20 @@ func (uq *UserQuery) WithNamedCredentials(name string, opts ...func(*CredentialQ
 		uq.withNamedCredentials = make(map[string]*CredentialQuery)
 	}
 	uq.withNamedCredentials[name] = query
+	return uq
+}
+
+// WithNamedAccessTokens tells the query-builder to eager-load the nodes that are connected to the "access_tokens"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithNamedAccessTokens(name string, opts ...func(*RefreshTokenQuery)) *UserQuery {
+	query := (&RefreshTokenClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if uq.withNamedAccessTokens == nil {
+		uq.withNamedAccessTokens = make(map[string]*RefreshTokenQuery)
+	}
+	uq.withNamedAccessTokens[name] = query
 	return uq
 }
 

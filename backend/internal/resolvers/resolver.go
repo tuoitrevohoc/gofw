@@ -11,11 +11,12 @@ import (
 
 // Resolver is the resolver root.
 type Resolver struct {
-	client        *ent.Client
-	authenticator *auth.Authenticator
+	client                *ent.Client
+	authenticator         *auth.Authenticator
+	authenticationService *auth.AuthenticationService
 }
 
 // NewResolver creates a new resolver.
-func NewResolver(client *ent.Client, authenticator *auth.Authenticator) *Resolver {
-	return &Resolver{client: client, authenticator: authenticator}
+func NewResolver(client *ent.Client, authenticator *auth.Authenticator, authenticationService *auth.AuthenticationService) *Resolver {
+	return &Resolver{client: client, authenticator: authenticator, authenticationService: authenticationService}
 }

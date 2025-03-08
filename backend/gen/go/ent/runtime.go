@@ -3,8 +3,11 @@
 package ent
 
 import (
+	"time"
+
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	"github.com/tuoitrevohoc/gofw/backend/schema/models"
 )
@@ -29,6 +32,28 @@ func init() {
 	credentialDescData := credentialFields[1].Descriptor()
 	// credential.DataValidator is a validator for the "data" field. It is called by the builders before save.
 	credential.DataValidator = credentialDescData.Validators[0].(func(string) error)
+	refreshtokenFields := models.RefreshToken{}.Fields()
+	_ = refreshtokenFields
+	// refreshtokenDescToken is the schema descriptor for token field.
+	refreshtokenDescToken := refreshtokenFields[0].Descriptor()
+	// refreshtoken.TokenValidator is a validator for the "token" field. It is called by the builders before save.
+	refreshtoken.TokenValidator = refreshtokenDescToken.Validators[0].(func(string) error)
+	// refreshtokenDescCreatedAt is the schema descriptor for created_at field.
+	refreshtokenDescCreatedAt := refreshtokenFields[1].Descriptor()
+	// refreshtoken.DefaultCreatedAt holds the default value on creation for the created_at field.
+	refreshtoken.DefaultCreatedAt = refreshtokenDescCreatedAt.Default.(func() time.Time)
+	// refreshtokenDescRefreshAt is the schema descriptor for refresh_at field.
+	refreshtokenDescRefreshAt := refreshtokenFields[2].Descriptor()
+	// refreshtoken.DefaultRefreshAt holds the default value on creation for the refresh_at field.
+	refreshtoken.DefaultRefreshAt = refreshtokenDescRefreshAt.Default.(func() time.Time)
+	// refreshtokenDescIPAddress is the schema descriptor for ip_address field.
+	refreshtokenDescIPAddress := refreshtokenFields[4].Descriptor()
+	// refreshtoken.IPAddressValidator is a validator for the "ip_address" field. It is called by the builders before save.
+	refreshtoken.IPAddressValidator = refreshtokenDescIPAddress.Validators[0].(func(string) error)
+	// refreshtokenDescUserAgent is the schema descriptor for user_agent field.
+	refreshtokenDescUserAgent := refreshtokenFields[5].Descriptor()
+	// refreshtoken.UserAgentValidator is a validator for the "user_agent" field. It is called by the builders before save.
+	refreshtoken.UserAgentValidator = refreshtokenDescUserAgent.Validators[0].(func(string) error)
 	userFields := models.User{}.Fields()
 	_ = userFields
 	// userDescEmail is the schema descriptor for email field.

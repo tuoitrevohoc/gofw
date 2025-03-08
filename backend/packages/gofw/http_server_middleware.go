@@ -12,6 +12,12 @@ import (
 type loggerKey struct{}
 type requestIDKey struct{}
 type statsdKey struct{}
+type requestResponseKey struct{}
+
+type RequestResponse struct {
+	Request  *http.Request
+	Response *http.ResponseWriter
+}
 
 const RequestIDHeader = "X-Request-ID"
 
@@ -30,6 +36,20 @@ func ContextStatsd(ctx context.Context) *statsd.Client {
 
 	logger := ContextLogger(ctx)
 	logger.Error("Statsd client not found in context")
+	return nil
+}
+
+func ContextRequest(ctx context.Context) *http.Request {
+	if request, ok := ctx.Value(requestResponseKey{}).(*RequestResponse); ok {
+		return request.Request
+	}
+	return nil
+}
+
+func ContextResponseWriter(ctx context.Context) *http.ResponseWriter {
+	if responseWriter, ok := ctx.Value(requestResponseKey{}).(*RequestResponse); ok {
+		return responseWriter.Response
+	}
 	return nil
 }
 
@@ -55,6 +75,10 @@ func WithRequestID(ctx context.Context, requestID string) context.Context {
 	return context.WithValue(ctx, requestIDKey{}, requestID)
 }
 
+func WithRequestResponse(ctx context.Context, requestResponse *RequestResponse) context.Context {
+	return context.WithValue(ctx, requestResponseKey{}, requestResponse)
+}
+
 // ServiceManagerMiddleware creates a new middleware that adds the logger to the request context
 func ServiceManagerMiddleware(manager *ServiceManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -75,6 +99,7 @@ func ServiceManagerMiddleware(manager *ServiceManager) func(http.Handler) http.H
 			ctx := WithLogger(r.Context(), requestLogger)
 			ctx = WithStatsd(ctx, manager.Statsd())
 			ctx = WithRequestID(ctx, requestID)
+			ctx = WithRequestResponse(ctx, &RequestResponse{Request: r, Response: &w})
 
 			// Add panic recovery
 			defer func() {

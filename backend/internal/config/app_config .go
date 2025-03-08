@@ -8,10 +8,11 @@ import (
 )
 
 type AppConfig struct {
-	DbUrl  string `mapstructure:"db_url"`
-	Port   string `mapstructure:"port"`
-	Domain string `mapstructure:"domain"`
-	Origin string `mapstructure:"origin"`
+	DbUrl     string `mapstructure:"db_url"`
+	Port      string `mapstructure:"port"`
+	Domain    string `mapstructure:"domain"`
+	Origin    string `mapstructure:"origin"`
+	JwtSecret string `mapstructure:"jwt_secret"`
 }
 
 func LoadAppConfig() (*AppConfig, error) {

@@ -57,6 +57,38 @@ var (
 			},
 		},
 	}
+	// RefreshTokensColumns holds the columns for the "refresh_tokens" table.
+	RefreshTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "token", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "refresh_at", Type: field.TypeTime},
+		{Name: "expire_at", Type: field.TypeTime},
+		{Name: "ip_address", Type: field.TypeString},
+		{Name: "user_agent", Type: field.TypeString},
+		{Name: "user_access_tokens", Type: field.TypeInt},
+	}
+	// RefreshTokensTable holds the schema information for the "refresh_tokens" table.
+	RefreshTokensTable = &schema.Table{
+		Name:       "refresh_tokens",
+		Columns:    RefreshTokensColumns,
+		PrimaryKey: []*schema.Column{RefreshTokensColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "refresh_tokens_users_access_tokens",
+				Columns:    []*schema.Column{RefreshTokensColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "refreshtoken_token",
+				Unique:  false,
+				Columns: []*schema.Column{RefreshTokensColumns[1]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -84,6 +116,7 @@ var (
 	Tables = []*schema.Table{
 		AuthSessionsTable,
 		CredentialsTable,
+		RefreshTokensTable,
 		UsersTable,
 	}
 )
@@ -91,13 +124,17 @@ var (
 func init() {
 	AuthSessionsTable.ForeignKeys[0].RefTable = UsersTable
 	AuthSessionsTable.Annotation = &entsql.Annotation{
-		IncrementStart: func(i int) *int { return &i }(8589934592),
+		IncrementStart: func(i int) *int { return &i }(0),
 	}
 	CredentialsTable.ForeignKeys[0].RefTable = UsersTable
 	CredentialsTable.Annotation = &entsql.Annotation{
 		IncrementStart: func(i int) *int { return &i }(4294967296),
 	}
+	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
+	RefreshTokensTable.Annotation = &entsql.Annotation{
+		IncrementStart: func(i int) *int { return &i }(8589934592),
+	}
 	UsersTable.Annotation = &entsql.Annotation{
-		IncrementStart: func(i int) *int { return &i }(0),
+		IncrementStart: func(i int) *int { return &i }(12884901888),
 	}
 }

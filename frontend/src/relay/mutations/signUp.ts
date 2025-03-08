@@ -6,8 +6,8 @@ export function useSignUpMutation() {
   return useMutation<signUpMutation>(graphql`
     mutation signUpMutation($input: SignUpInput!) {
       signUp(input: $input) {
-        id
-        email
+        accessToken
+        expiry
       }
     }
   `);
@@ -30,8 +30,8 @@ export function useFinishAuthnRegistrationMutation() {
       $response: String!
     ) {
       finishAuthnRegistration(email: $email, response: $response) {
-        id
-        email
+        accessToken
+        expiry
       }
     }
   `);

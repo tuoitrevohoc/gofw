@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
 
@@ -176,6 +177,106 @@ func newCredentialPaginateArgs(rv map[string]any) *credentialPaginateArgs {
 }
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (rt *RefreshTokenQuery) CollectFields(ctx context.Context, satisfies ...string) (*RefreshTokenQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return rt, nil
+	}
+	if err := rt.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return rt, nil
+}
+
+func (rt *RefreshTokenQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(refreshtoken.Columns))
+		selectedFields = []string{refreshtoken.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "user":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: rt.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			rt.withUser = query
+		case "token":
+			if _, ok := fieldSeen[refreshtoken.FieldToken]; !ok {
+				selectedFields = append(selectedFields, refreshtoken.FieldToken)
+				fieldSeen[refreshtoken.FieldToken] = struct{}{}
+			}
+		case "createdAt":
+			if _, ok := fieldSeen[refreshtoken.FieldCreatedAt]; !ok {
+				selectedFields = append(selectedFields, refreshtoken.FieldCreatedAt)
+				fieldSeen[refreshtoken.FieldCreatedAt] = struct{}{}
+			}
+		case "refreshAt":
+			if _, ok := fieldSeen[refreshtoken.FieldRefreshAt]; !ok {
+				selectedFields = append(selectedFields, refreshtoken.FieldRefreshAt)
+				fieldSeen[refreshtoken.FieldRefreshAt] = struct{}{}
+			}
+		case "expireAt":
+			if _, ok := fieldSeen[refreshtoken.FieldExpireAt]; !ok {
+				selectedFields = append(selectedFields, refreshtoken.FieldExpireAt)
+				fieldSeen[refreshtoken.FieldExpireAt] = struct{}{}
+			}
+		case "ipAddress":
+			if _, ok := fieldSeen[refreshtoken.FieldIPAddress]; !ok {
+				selectedFields = append(selectedFields, refreshtoken.FieldIPAddress)
+				fieldSeen[refreshtoken.FieldIPAddress] = struct{}{}
+			}
+		case "userAgent":
+			if _, ok := fieldSeen[refreshtoken.FieldUserAgent]; !ok {
+				selectedFields = append(selectedFields, refreshtoken.FieldUserAgent)
+				fieldSeen[refreshtoken.FieldUserAgent] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		rt.Select(selectedFields...)
+	}
+	return nil
+}
+
+type refreshtokenPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []RefreshTokenPaginateOption
+}
+
+func newRefreshTokenPaginateArgs(rv map[string]any) *refreshtokenPaginateArgs {
+	args := &refreshtokenPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (u *UserQuery) CollectFields(ctx context.Context, satisfies ...string) (*UserQuery, error) {
 	fc := graphql.GetFieldContext(ctx)
 	if fc == nil {
@@ -218,6 +319,19 @@ func (u *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *graph
 				return err
 			}
 			u.WithNamedCredentials(alias, func(wq *CredentialQuery) {
+				*wq = *query
+			})
+
+		case "accessTokens":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&RefreshTokenClient{config: u.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, refreshtokenImplementors)...); err != nil {
+				return err
+			}
+			u.WithNamedAccessTokens(alias, func(wq *RefreshTokenQuery) {
 				*wq = *query
 			})
 		case "name":

@@ -21,8 +21,28 @@ func NewGUID(nodeType string, id int) *GUID {
 	}
 }
 
+func ParseGUID(guid string) *GUID {
+	// decode base64 string
+	decoded, err := base64.StdEncoding.DecodeString(guid)
+	if err != nil {
+		return nil
+	}
+
+	parts := strings.Split(string(decoded), "/")
+	if len(parts) != 2 {
+		return nil
+	}
+
+	id, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return nil
+	}
+
+	return NewGUID(parts[0], id)
+}
+
 func (g *GUID) String() string {
-	return fmt.Sprintf("%s/%d", g.nodeType, g.id)
+	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s/%d", g.nodeType, g.id)))
 }
 
 func (g *GUID) UnmarshalGQLContext(ctx context.Context, v interface{}) error {
@@ -30,28 +50,20 @@ func (g *GUID) UnmarshalGQLContext(ctx context.Context, v interface{}) error {
 	if !ok {
 		return fmt.Errorf("guid must be a string")
 	}
-	// parse base64 string
-	decoded, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return fmt.Errorf("invalid GUID format: %s", s)
-	}
-	parts := strings.Split(string(decoded), "/")
-	if len(parts) != 2 {
-		return fmt.Errorf("invalid GUID format: %s", s)
-	}
-	g.nodeType = parts[0]
-	g.id, err = strconv.Atoi(parts[1])
-	if err != nil {
+
+	guid := ParseGUID(s)
+	if guid == nil {
 		return fmt.Errorf("invalid GUID format: %s", s)
 	}
 
+	g.nodeType = guid.nodeType
+	g.id = guid.id
 	return nil
 }
 
 func (g GUID) MarshalGQLContext(ctx context.Context, w io.Writer) error {
-	guid := g.String()
-	encoded := base64.StdEncoding.EncodeToString([]byte(guid))
-	w.Write([]byte(strconv.Quote(encoded)))
+	guid := strconv.Quote(g.String())
+	w.Write([]byte(guid))
 	return nil
 }
 

@@ -2,4 +2,4 @@
 
 package internal
 
-const IncrementStarts = "{\"auth_sessions\":8589934592,\"credentials\":4294967296,\"users\":0}"
+const IncrementStarts = "{\"auth_sessions\":0,\"credentials\":4294967296,\"refresh_tokens\":8589934592,\"users\":12884901888}"

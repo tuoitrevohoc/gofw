@@ -42,13 +42,16 @@ type UserEdges struct {
 	AuthSessions *AuthSession `json:"auth_sessions,omitempty"`
 	// Credentials holds the value of the credentials edge.
 	Credentials []*Credential `json:"credentials,omitempty"`
+	// AccessTokens holds the value of the access_tokens edge.
+	AccessTokens []*RefreshToken `json:"access_tokens,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 	// totalCount holds the count of the edges above.
-	totalCount [2]map[string]int
+	totalCount [3]map[string]int
 
-	namedCredentials map[string][]*Credential
+	namedCredentials  map[string][]*Credential
+	namedAccessTokens map[string][]*RefreshToken
 }
 
 // AuthSessionsOrErr returns the AuthSessions value or an error if the edge
@@ -69,6 +72,15 @@ func (e UserEdges) CredentialsOrErr() ([]*Credential, error) {
 		return e.Credentials, nil
 	}
 	return nil, &NotLoadedError{edge: "credentials"}
+}
+
+// AccessTokensOrErr returns the AccessTokens value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AccessTokensOrErr() ([]*RefreshToken, error) {
+	if e.loadedTypes[2] {
+		return e.AccessTokens, nil
+	}
+	return nil, &NotLoadedError{edge: "access_tokens"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -164,6 +176,11 @@ func (u *User) QueryCredentials() *CredentialQuery {
 	return NewUserClient(u.config).QueryCredentials(u)
 }
 
+// QueryAccessTokens queries the "access_tokens" edge of the User entity.
+func (u *User) QueryAccessTokens() *RefreshTokenQuery {
+	return NewUserClient(u.config).QueryAccessTokens(u)
+}
+
 // Update returns a builder for updating this User.
 // Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -229,6 +246,30 @@ func (u *User) appendNamedCredentials(name string, edges ...*Credential) {
 		u.Edges.namedCredentials[name] = []*Credential{}
 	} else {
 		u.Edges.namedCredentials[name] = append(u.Edges.namedCredentials[name], edges...)
+	}
+}
+
+// NamedAccessTokens returns the AccessTokens named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (u *User) NamedAccessTokens(name string) ([]*RefreshToken, error) {
+	if u.Edges.namedAccessTokens == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := u.Edges.namedAccessTokens[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (u *User) appendNamedAccessTokens(name string, edges ...*RefreshToken) {
+	if u.Edges.namedAccessTokens == nil {
+		u.Edges.namedAccessTokens = make(map[string][]*RefreshToken)
+	}
+	if len(edges) == 0 {
+		u.Edges.namedAccessTokens[name] = []*RefreshToken{}
+	} else {
+		u.Edges.namedAccessTokens[name] = append(u.Edges.namedAccessTokens[name], edges...)
 	}
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/tuoitrevohoc/gofw/backend/internal/auth"
@@ -33,11 +34,15 @@ func main() {
 	}
 
 	authenticator := auth.NewPasskeyAuthenticator(manager, entClient, cfg.Domain, cfg.Origin)
-	graphqlHandler := resolvers.NewHandler(entClient, authenticator)
-
+	authenticationService := auth.NewAuthenticationService(entClient, []byte(cfg.JwtSecret))
+	graphqlHandler := resolvers.NewHandler(entClient, authenticator, authenticationService)
 	server := gofw.NewHttpServer(manager, cfg.Port)
+
+	server.Use(authenticationService.AuthMiddleware)
+
 	server.AddHandler("/graphql", graphqlHandler)
 	server.AddHandler("/graphql/playground", playground.Handler("GraphQL playground", "/graphql"))
+	server.AddHandler(auth.RefreshTokenPath, http.HandlerFunc(authenticationService.RefreshTokenEndpoint))
 
 	manager.AddService(server)
 

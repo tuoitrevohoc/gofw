@@ -16,6 +16,8 @@ type Tx struct {
 	AuthSession *AuthSessionClient
 	// Credential is the client for interacting with the Credential builders.
 	Credential *CredentialClient
+	// RefreshToken is the client for interacting with the RefreshToken builders.
+	RefreshToken *RefreshTokenClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -151,6 +153,7 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.AuthSession = NewAuthSessionClient(tx.config)
 	tx.Credential = NewCredentialClient(tx.config)
+	tx.RefreshToken = NewRefreshTokenClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 

@@ -127,7 +127,7 @@ func (a *Authenticator) BeginRegistration(ctx context.Context, email string) (*p
 	creation, session, err := a.webauthn.BeginRegistration(NewWebAuthnUser(user))
 
 	if err != nil {
-		logger.Error("Error beginning registration", zap.Error(err))
+		logger.Error("error beginning registration", zap.Error(err))
 		return nil, err
 	}
 
@@ -135,7 +135,7 @@ func (a *Authenticator) BeginRegistration(ctx context.Context, email string) (*p
 	logger.Info("authSession", zap.Any("challenge", session.Challenge), zap.Any("response", creation.Response.Challenge))
 
 	if err != nil {
-		logger.Error("Error converting to auth session", zap.Error(err))
+		logger.Error("error converting to auth session", zap.Error(err))
 		return nil, err
 	}
 

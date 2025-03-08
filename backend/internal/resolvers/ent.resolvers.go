@@ -40,6 +40,11 @@ func (r *queryResolver) Nodes(ctx context.Context, ids []*scalars.GUID) ([]ent.N
 }
 
 // ID is the resolver for the id field.
+func (r *refreshTokenResolver) ID(ctx context.Context, obj *ent.RefreshToken) (*scalars.GUID, error) {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+
+// ID is the resolver for the id field.
 func (r *userResolver) ID(ctx context.Context, obj *ent.User) (*scalars.GUID, error) {
 	return scalars.NewGUID(string(user.Table), obj.ID), nil
 }
@@ -53,10 +58,14 @@ func (r *Resolver) Credential() graphql1.CredentialResolver { return &credential
 // Query returns graphql1.QueryResolver implementation.
 func (r *Resolver) Query() graphql1.QueryResolver { return &queryResolver{r} }
 
+// RefreshToken returns graphql1.RefreshTokenResolver implementation.
+func (r *Resolver) RefreshToken() graphql1.RefreshTokenResolver { return &refreshTokenResolver{r} }
+
 // User returns graphql1.UserResolver implementation.
 func (r *Resolver) User() graphql1.UserResolver { return &userResolver{r} }
 
 type authSessionResolver struct{ *Resolver }
 type credentialResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type refreshTokenResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

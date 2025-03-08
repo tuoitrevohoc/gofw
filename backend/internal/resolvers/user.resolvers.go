@@ -11,16 +11,18 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
-	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
+	usrPkg "github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	graphql1 "github.com/tuoitrevohoc/gofw/backend/gen/go/graphql"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/graphql/model"
+	"github.com/tuoitrevohoc/gofw/backend/internal/auth"
+	"github.com/tuoitrevohoc/gofw/backend/internal/scalars"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // SignUp is the resolver for the signUp field.
-func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) (*ent.User, error) {
+func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) (*model.AccessToken, error) {
 	hasUser, err := r.client.User.Query().Where(
-		user.Email(input.Email),
+		usrPkg.Email(input.Email),
 	).Exist(ctx)
 
 	if err != nil {
@@ -41,17 +43,43 @@ func (r *mutationResolver) SignUp(ctx context.Context, input model.SignUpInput) 
 		return nil, err
 	}
 
-	return user, nil
-}
-
-// SignIn is the resolver for the signIn field.
-func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*ent.User, error) {
-	user, err := r.client.User.Query().Where(user.Email(input.Email)).Only(ctx)
+	token, err := r.authenticationService.Login(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return &model.AccessToken{
+		AccessToken: token.AccessToken,
+		Expiry:      int(token.Expiry),
+		Viewer: &model.Viewer{
+			UserID:          scalars.NewGUID(usrPkg.Table, user.ID),
+			Profile:         user,
+			IsAuthenticated: true,
+		},
+	}, nil
+}
+
+// SignIn is the resolver for the signIn field.
+func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) (*model.AccessToken, error) {
+	user, err := r.client.User.Query().Where(usrPkg.Email(input.Email)).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := r.authenticationService.Login(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.AccessToken{
+		AccessToken: token.AccessToken,
+		Expiry:      int(token.Expiry),
+		Viewer: &model.Viewer{
+			UserID:          scalars.NewGUID(usrPkg.Table, user.ID),
+			Profile:         user,
+			IsAuthenticated: true,
+		},
+	}, nil
 }
 
 // BeginAuthnRegistration is the resolver for the beginAuthnRegistration field.
@@ -59,13 +87,13 @@ func (r *mutationResolver) BeginAuthnRegistration(ctx context.Context, email str
 	credientialCreation, err := r.authenticator.BeginRegistration(ctx, email)
 
 	if err != nil {
-		return nil, fmt.Errorf("fail to begin passkey registration")
+		return nil, err
 	}
 
 	// convert credential to json
 	json, err := json.Marshal(credientialCreation)
 	if err != nil {
-		return nil, fmt.Errorf("fail to create credential creation json")
+		return nil, fmt.Errorf("something went wrong")
 	}
 
 	return &model.AuthnRegistrationResponse{
@@ -74,7 +102,7 @@ func (r *mutationResolver) BeginAuthnRegistration(ctx context.Context, email str
 }
 
 // FinishAuthnRegistration is the resolver for the finishAuthnRegistration field.
-func (r *mutationResolver) FinishAuthnRegistration(ctx context.Context, email string, response string) (*ent.User, error) {
+func (r *mutationResolver) FinishAuthnRegistration(ctx context.Context, email string, response string) (*model.AccessToken, error) {
 	parsedResponse, err := protocol.ParseCredentialCreationResponseBytes([]byte(response))
 
 	if err != nil {
@@ -86,10 +114,41 @@ func (r *mutationResolver) FinishAuthnRegistration(ctx context.Context, email st
 		return nil, fmt.Errorf("fail to finish passkey registration")
 	}
 
-	return user, nil
+	token, err := r.authenticationService.Login(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.AccessToken{
+		AccessToken: token.AccessToken,
+		Expiry:      int(token.Expiry),
+		Viewer: &model.Viewer{
+			UserID:          scalars.NewGUID(usrPkg.Table, user.ID),
+			Profile:         user,
+			IsAuthenticated: true,
+		},
+	}, nil
+}
+
+// Viewer is the resolver for the viewer field.
+func (r *queryResolver) Viewer(ctx context.Context) (*model.Viewer, error) {
+	return auth.ViewerFromContext(ctx), nil
+}
+
+// Profile is the resolver for the profile field.
+func (r *viewerResolver) Profile(ctx context.Context, obj *model.Viewer) (*ent.User, error) {
+	if !obj.IsAuthenticated {
+		return nil, fmt.Errorf("user is not authenticated")
+	}
+
+	return r.client.User.Get(ctx, obj.UserID.Id())
 }
 
 // Mutation returns graphql1.MutationResolver implementation.
 func (r *Resolver) Mutation() graphql1.MutationResolver { return &mutationResolver{r} }
 
+// Viewer returns graphql1.ViewerResolver implementation.
+func (r *Resolver) Viewer() graphql1.ViewerResolver { return &viewerResolver{r} }
+
 type mutationResolver struct{ *Resolver }
+type viewerResolver struct{ *Resolver }

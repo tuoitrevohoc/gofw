@@ -19,16 +19,26 @@ export default function AuthLayout() {
       <Stack
         flexGrow={1}
         display="flex"
-        justifyContent="center"
+        justifyContent={{
+          xs: "flex-start",
+          md: "center",
+        }}
         alignItems="center"
       >
         <Box
           sx={{
-            width: 420,
-            margin: "0 auto",
+            minWidth: 420,
+            marginX: "auto",
+            marginY: {
+              xs: 5,
+              md: 0,
+            },
             backgroundColor: "var(--palette-background-default);",
             borderRadius: 2,
-            p: 5,
+            p: {
+              xs: 2,
+              md: 5,
+            },
           }}
         >
           <Outlet />

@@ -82,6 +82,16 @@ type Query {
     ids: [ID!]!
   ): [Node]!
 }
+type RefreshToken implements Node {
+  id: ID!
+  token: String!
+  createdAt: Time!
+  refreshAt: Time!
+  expireAt: Time!
+  ipAddress: String!
+  userAgent: String!
+  user: User!
+}
 """
 The builtin Time type
 """
@@ -96,4 +106,5 @@ type User implements Node {
   lastSignInAt: Time
   authSessions: AuthSession
   credentials: [Credential!]
+  accessTokens: [RefreshToken!]
 }

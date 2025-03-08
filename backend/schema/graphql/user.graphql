@@ -1,5 +1,13 @@
 type Viewer {
-  user: User
+  profile: User! @goField(forceResolver: true)
+  userId: ID
+  isAuthenticated: Boolean!
+}
+
+type AccessToken {
+  accessToken: String!
+  expiry: Int!
+  viewer: Viewer!
 }
 
 input SignUpInput {
@@ -16,10 +24,14 @@ type AuthnRegistrationResponse {
   credentialCreation: String!
 }
 
+extend type Query {
+  viewer: Viewer!
+}
+
 extend type Mutation {
-  signUp(input: SignUpInput!): User!
-  signIn(input: SignInInput!): User!
+  signUp(input: SignUpInput!): AccessToken!
+  signIn(input: SignInInput!): AccessToken!
 
   beginAuthnRegistration(email: String!): AuthnRegistrationResponse!
-  finishAuthnRegistration(email: String!, response: String!): User!
+  finishAuthnRegistration(email: String!, response: String!): AccessToken!
 }

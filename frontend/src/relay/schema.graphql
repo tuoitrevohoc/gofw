@@ -25,14 +25,18 @@ custom scalar types.
 """
 directive @specifiedBy(url: String!) on SCALAR
 
+type AccessToken {
+  accessToken: String!
+  expiry: Int!
+  viewer: Viewer!
+}
+
 type AuthnRegistrationResponse {
   credentialCreation: String!
 }
 
 type AuthSession implements Node {
   id: ID!
-  challenge: String!
-  replyingpartyid: String!
   data: String!
   userID: ID
   user: User
@@ -52,10 +56,10 @@ https://relay.dev/graphql/connections.htm#sec-Cursor
 scalar Cursor
 
 type Mutation {
-  signUp(input: SignUpInput!): User!
-  signIn(input: SignInInput!): User!
+  signUp(input: SignUpInput!): AccessToken!
+  signIn(input: SignInInput!): AccessToken!
   beginAuthnRegistration(email: String!): AuthnRegistrationResponse!
-  finishAuthnRegistration(email: String!, response: String!): User!
+  finishAuthnRegistration(email: String!, response: String!): AccessToken!
 }
 
 """
@@ -108,6 +112,18 @@ type Query {
     """The list of node IDs."""
     ids: [ID!]!
   ): [Node]!
+  viewer: Viewer!
+}
+
+type RefreshToken implements Node {
+  id: ID!
+  token: String!
+  createdAt: Time!
+  refreshAt: Time!
+  expireAt: Time!
+  ipAddress: String!
+  userAgent: String!
+  user: User!
 }
 
 input SignInInput {
@@ -131,11 +147,14 @@ type User implements Node {
   avatar: String
   finishedRegistration: Boolean!
   lastSignInAt: Time
-  authSessions: [AuthSession!]
+  authSessions: AuthSession
   credentials: [Credential!]
+  accessTokens: [RefreshToken!]
 }
 
 type Viewer {
-  user: User
+  profile: User!
+  userId: ID
+  isAuthenticated: Boolean!
 }
 

@@ -4,7 +4,14 @@ package model
 
 import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
+	"github.com/tuoitrevohoc/gofw/backend/internal/scalars"
 )
+
+type AccessToken struct {
+	AccessToken string  `json:"accessToken"`
+	Expiry      int     `json:"expiry"`
+	Viewer      *Viewer `json:"viewer"`
+}
 
 type AuthnRegistrationResponse struct {
 	CredentialCreation string `json:"credentialCreation"`
@@ -21,5 +28,7 @@ type SignUpInput struct {
 }
 
 type Viewer struct {
-	User *ent.User `json:"user,omitempty"`
+	Profile         *ent.User     `json:"profile"`
+	UserID          *scalars.GUID `json:"userId,omitempty"`
+	IsAuthenticated bool          `json:"isAuthenticated"`
 }

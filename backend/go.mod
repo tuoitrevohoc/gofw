@@ -8,6 +8,7 @@ require (
 	github.com/99designs/gqlgen v0.17.66
 	github.com/DataDog/datadog-go/v5 v5.5.0
 	github.com/go-webauthn/webauthn v0.12.1
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lib/pq v1.10.9
@@ -31,7 +32,6 @@ require (
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/go-webauthn/x v0.1.18 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-tpm v0.9.3 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect

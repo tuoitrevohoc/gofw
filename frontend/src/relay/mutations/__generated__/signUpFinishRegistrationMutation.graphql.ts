@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<7ac8014adde37ddd03390701be0690af>>
+ * @generated SignedSource<<cc95a4771237abc036975a10fe5f35d4>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -15,8 +15,8 @@ export type signUpFinishRegistrationMutation$variables = {
 };
 export type signUpFinishRegistrationMutation$data = {
   readonly finishAuthnRegistration: {
-    readonly email: string;
-    readonly id: string;
+    readonly accessToken: string;
+    readonly expiry: number;
   };
 };
 export type signUpFinishRegistrationMutation = {
@@ -52,7 +52,7 @@ v1 = [
         "variableName": "response"
       }
     ],
-    "concreteType": "User",
+    "concreteType": "AccessToken",
     "kind": "LinkedField",
     "name": "finishAuthnRegistration",
     "plural": false,
@@ -61,14 +61,14 @@ v1 = [
         "alias": null,
         "args": null,
         "kind": "ScalarField",
-        "name": "id",
+        "name": "accessToken",
         "storageKey": null
       },
       {
         "alias": null,
         "args": null,
         "kind": "ScalarField",
-        "name": "email",
+        "name": "expiry",
         "storageKey": null
       }
     ],
@@ -93,16 +93,16 @@ return {
     "selections": (v1/*: any*/)
   },
   "params": {
-    "cacheID": "960133cae203e2adeb79f7e20f2ec57a",
+    "cacheID": "f9de7e3f503eee5723bb7d1e0cfe505e",
     "id": null,
     "metadata": {},
     "name": "signUpFinishRegistrationMutation",
     "operationKind": "mutation",
-    "text": "mutation signUpFinishRegistrationMutation(\n  $email: String!\n  $response: String!\n) {\n  finishAuthnRegistration(email: $email, response: $response) {\n    id\n    email\n  }\n}\n"
+    "text": "mutation signUpFinishRegistrationMutation(\n  $email: String!\n  $response: String!\n) {\n  finishAuthnRegistration(email: $email, response: $response) {\n    accessToken\n    expiry\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "187c442a5984907ba84d69fb9bbfe544";
+(node as any).hash = "76a61810a0799e2aeba3d4ab1fd01879";
 
 export default node;

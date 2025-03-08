@@ -9,6 +9,6 @@ import (
 )
 
 // NewHandler returns a new GraphQL handler.
-func NewHandler(client *ent.Client, authenticator *auth.Authenticator) *handler.Server {
-	return gofw.GQLHandler(gql.NewExecutableSchema(gql.Config{Resolvers: &Resolver{client: client, authenticator: authenticator}}))
+func NewHandler(client *ent.Client, authenticator *auth.Authenticator, authenticationService *auth.AuthenticationService) *handler.Server {
+	return gofw.GQLHandler(gql.NewExecutableSchema(gql.Config{Resolvers: &Resolver{client: client, authenticator: authenticator, authenticationService: authenticationService}}))
 }
