@@ -11,6 +11,7 @@ services:
       - DB_URL=${DB_URL}
       - DOMAIN=${DOMAIN}
       - ORIGIN=https://${DOMAIN}
+      - JWT_SECRET=${JWT_SECRET}
     volumes:
       - .:/workspace
     logging:

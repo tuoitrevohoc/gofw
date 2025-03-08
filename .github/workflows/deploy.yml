@@ -94,6 +94,8 @@ jobs:
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             export DB_URL="postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}?sslmode=disable"
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            export ORIGIN=${{ secrets.ORIGIN }}
 
             docker compose pull
             docker compose -f docker-compose.yaml up -d --force-recreate --build
