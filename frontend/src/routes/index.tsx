@@ -9,6 +9,7 @@ import AuthLayout from "./auth/AuthLayout";
 import RegisterPage from "./auth/RegisterPage";
 import { graphql, useLazyLoadQuery } from "react-relay";
 import { routesQuery } from "./__generated__/routesQuery.graphql";
+import LoginPage from "./auth/LoginPage";
 
 const SidebarMenu: MenuItem[] = [
   { icon: Analytics, label: "Home", path: "/" },
@@ -43,7 +44,9 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/auth" element={<AuthLayout />}>
+        <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/register" element={<RegisterPage />} />
+        <Route path="*" element={<Navigate to="/auth/register" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/auth/register" replace />} />
     </Routes>

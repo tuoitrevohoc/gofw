@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
@@ -97,25 +96,6 @@ func (uc *UserCreate) SetNillableLastSignInAt(t *time.Time) *UserCreate {
 		uc.SetLastSignInAt(*t)
 	}
 	return uc
-}
-
-// SetAuthSessionsID sets the "auth_sessions" edge to the AuthSession entity by ID.
-func (uc *UserCreate) SetAuthSessionsID(id int) *UserCreate {
-	uc.mutation.SetAuthSessionsID(id)
-	return uc
-}
-
-// SetNillableAuthSessionsID sets the "auth_sessions" edge to the AuthSession entity by ID if the given value is not nil.
-func (uc *UserCreate) SetNillableAuthSessionsID(id *int) *UserCreate {
-	if id != nil {
-		uc = uc.SetAuthSessionsID(*id)
-	}
-	return uc
-}
-
-// SetAuthSessions sets the "auth_sessions" edge to the AuthSession entity.
-func (uc *UserCreate) SetAuthSessions(a *AuthSession) *UserCreate {
-	return uc.SetAuthSessionsID(a.ID)
 }
 
 // AddCredentialIDs adds the "credentials" edge to the Credential entity by IDs.
@@ -251,22 +231,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.LastSignInAt(); ok {
 		_spec.SetField(user.FieldLastSignInAt, field.TypeTime, value)
 		_node.LastSignInAt = value
-	}
-	if nodes := uc.mutation.AuthSessionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   user.AuthSessionsTable,
-			Columns: []string{user.AuthSessionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(authsession.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.CredentialsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

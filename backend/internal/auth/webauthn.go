@@ -3,7 +3,6 @@ package auth
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -11,40 +10,36 @@ import (
 )
 
 type WebAuthnUser struct {
-	ent.User
+	email string
 }
 
-func NewWebAuthnUser(user *ent.User) *WebAuthnUser {
+func NewWebAuthnUser(email string) *WebAuthnUser {
 	return &WebAuthnUser{
-		User: *user,
+		email: email,
 	}
 }
 
 func (u *WebAuthnUser) WebAuthnID() []byte {
-	return []byte(fmt.Sprintf("%d", u.ID))
+	return []byte(u.email)
 }
 
 func (u *WebAuthnUser) WebAuthnName() string {
-	return u.Email
+	return u.email
 }
 
 func (u *WebAuthnUser) WebAuthnDisplayName() string {
-	return u.Email
+	return u.email
 }
 
 func (u *WebAuthnUser) WebAuthnCredentials() []webauthn.Credential {
 	return []webauthn.Credential{}
 }
 
-func convertToAuthSession(session *webauthn.SessionData) (*ent.AuthSession, error) {
-	data, err := json.Marshal(session)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ent.AuthSession{
-		Data: string(data),
-	}, nil
+func encodeSession(session *webauthn.SessionData) *webauthn.SessionData {
+	challenge := base64.StdEncoding.EncodeToString([]byte(session.Challenge))
+	challenge = strings.TrimRight(challenge, "=")
+	session.Challenge = challenge
+	return session
 }
 
 func convertToCredential(webauthnCredential *webauthn.Credential) (*ent.Credential, error) {
@@ -70,18 +65,5 @@ func convertToWebAuthnCredential(credential *ent.Credential) (*webauthn.Credenti
 		return nil, err
 	}
 
-	return &result, nil
-}
-
-func convertToSessionData(session *ent.AuthSession) (*webauthn.SessionData, error) {
-	var result webauthn.SessionData
-
-	if err := json.Unmarshal([]byte(session.Data), &result); err != nil {
-		return nil, err
-	}
-
-	// decode challenge
-	result.Challenge = base64.URLEncoding.EncodeToString([]byte(result.Challenge))
-	result.Challenge = strings.TrimRight(result.Challenge, "=")
 	return &result, nil
 }

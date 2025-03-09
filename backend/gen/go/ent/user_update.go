@@ -11,7 +11,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/predicate"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
@@ -139,25 +138,6 @@ func (uu *UserUpdate) ClearLastSignInAt() *UserUpdate {
 	return uu
 }
 
-// SetAuthSessionsID sets the "auth_sessions" edge to the AuthSession entity by ID.
-func (uu *UserUpdate) SetAuthSessionsID(id int) *UserUpdate {
-	uu.mutation.SetAuthSessionsID(id)
-	return uu
-}
-
-// SetNillableAuthSessionsID sets the "auth_sessions" edge to the AuthSession entity by ID if the given value is not nil.
-func (uu *UserUpdate) SetNillableAuthSessionsID(id *int) *UserUpdate {
-	if id != nil {
-		uu = uu.SetAuthSessionsID(*id)
-	}
-	return uu
-}
-
-// SetAuthSessions sets the "auth_sessions" edge to the AuthSession entity.
-func (uu *UserUpdate) SetAuthSessions(a *AuthSession) *UserUpdate {
-	return uu.SetAuthSessionsID(a.ID)
-}
-
 // AddCredentialIDs adds the "credentials" edge to the Credential entity by IDs.
 func (uu *UserUpdate) AddCredentialIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddCredentialIDs(ids...)
@@ -191,12 +171,6 @@ func (uu *UserUpdate) AddAccessTokens(r ...*RefreshToken) *UserUpdate {
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
-}
-
-// ClearAuthSessions clears the "auth_sessions" edge to the AuthSession entity.
-func (uu *UserUpdate) ClearAuthSessions() *UserUpdate {
-	uu.mutation.ClearAuthSessions()
-	return uu
 }
 
 // ClearCredentials clears all "credentials" edges to the Credential entity.
@@ -319,35 +293,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.LastSignInAtCleared() {
 		_spec.ClearField(user.FieldLastSignInAt, field.TypeTime)
-	}
-	if uu.mutation.AuthSessionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   user.AuthSessionsTable,
-			Columns: []string{user.AuthSessionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(authsession.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.AuthSessionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   user.AuthSessionsTable,
-			Columns: []string{user.AuthSessionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(authsession.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uu.mutation.CredentialsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -567,25 +512,6 @@ func (uuo *UserUpdateOne) ClearLastSignInAt() *UserUpdateOne {
 	return uuo
 }
 
-// SetAuthSessionsID sets the "auth_sessions" edge to the AuthSession entity by ID.
-func (uuo *UserUpdateOne) SetAuthSessionsID(id int) *UserUpdateOne {
-	uuo.mutation.SetAuthSessionsID(id)
-	return uuo
-}
-
-// SetNillableAuthSessionsID sets the "auth_sessions" edge to the AuthSession entity by ID if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableAuthSessionsID(id *int) *UserUpdateOne {
-	if id != nil {
-		uuo = uuo.SetAuthSessionsID(*id)
-	}
-	return uuo
-}
-
-// SetAuthSessions sets the "auth_sessions" edge to the AuthSession entity.
-func (uuo *UserUpdateOne) SetAuthSessions(a *AuthSession) *UserUpdateOne {
-	return uuo.SetAuthSessionsID(a.ID)
-}
-
 // AddCredentialIDs adds the "credentials" edge to the Credential entity by IDs.
 func (uuo *UserUpdateOne) AddCredentialIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.AddCredentialIDs(ids...)
@@ -619,12 +545,6 @@ func (uuo *UserUpdateOne) AddAccessTokens(r ...*RefreshToken) *UserUpdateOne {
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
-}
-
-// ClearAuthSessions clears the "auth_sessions" edge to the AuthSession entity.
-func (uuo *UserUpdateOne) ClearAuthSessions() *UserUpdateOne {
-	uuo.mutation.ClearAuthSessions()
-	return uuo
 }
 
 // ClearCredentials clears all "credentials" edges to the Credential entity.
@@ -777,35 +697,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if uuo.mutation.LastSignInAtCleared() {
 		_spec.ClearField(user.FieldLastSignInAt, field.TypeTime)
-	}
-	if uuo.mutation.AuthSessionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   user.AuthSessionsTable,
-			Columns: []string{user.AuthSessionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(authsession.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.AuthSessionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   user.AuthSessionsTable,
-			Columns: []string{user.AuthSessionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(authsession.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uuo.mutation.CredentialsCleared() {
 		edge := &sqlgraph.EdgeSpec{

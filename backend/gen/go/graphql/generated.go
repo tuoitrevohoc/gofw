@@ -42,7 +42,6 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	AuthSession() AuthSessionResolver
 	Credential() CredentialResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
@@ -59,13 +58,6 @@ type ComplexityRoot struct {
 		AccessToken func(childComplexity int) int
 		Expiry      func(childComplexity int) int
 		Viewer      func(childComplexity int) int
-	}
-
-	AuthSession struct {
-		Data   func(childComplexity int) int
-		ID     func(childComplexity int) int
-		User   func(childComplexity int) int
-		UserID func(childComplexity int) int
 	}
 
 	AuthnRegistrationResponse struct {
@@ -112,7 +104,6 @@ type ComplexityRoot struct {
 
 	User struct {
 		AccessTokens         func(childComplexity int) int
-		AuthSessions         func(childComplexity int) int
 		Avatar               func(childComplexity int) int
 		Credentials          func(childComplexity int) int
 		Email                func(childComplexity int) int
@@ -130,11 +121,6 @@ type ComplexityRoot struct {
 	}
 }
 
-type AuthSessionResolver interface {
-	ID(ctx context.Context, obj *ent.AuthSession) (*scalars.GUID, error)
-
-	UserID(ctx context.Context, obj *ent.AuthSession) (*scalars.GUID, error)
-}
 type CredentialResolver interface {
 	ID(ctx context.Context, obj *ent.Credential) (*scalars.GUID, error)
 }
@@ -198,34 +184,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AccessToken.Viewer(childComplexity), true
-
-	case "AuthSession.data":
-		if e.complexity.AuthSession.Data == nil {
-			break
-		}
-
-		return e.complexity.AuthSession.Data(childComplexity), true
-
-	case "AuthSession.id":
-		if e.complexity.AuthSession.ID == nil {
-			break
-		}
-
-		return e.complexity.AuthSession.ID(childComplexity), true
-
-	case "AuthSession.user":
-		if e.complexity.AuthSession.User == nil {
-			break
-		}
-
-		return e.complexity.AuthSession.User(childComplexity), true
-
-	case "AuthSession.userID":
-		if e.complexity.AuthSession.UserID == nil {
-			break
-		}
-
-		return e.complexity.AuthSession.UserID(childComplexity), true
 
 	case "AuthnRegistrationResponse.credentialCreation":
 		if e.complexity.AuthnRegistrationResponse.CredentialCreation == nil {
@@ -432,13 +390,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.AccessTokens(childComplexity), true
 
-	case "User.authSessions":
-		if e.complexity.User.AuthSessions == nil {
-			break
-		}
-
-		return e.complexity.User.AuthSessions(childComplexity), true
-
 	case "User.avatar":
 		if e.complexity.User.Avatar == nil {
 			break
@@ -625,12 +576,6 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../../../schema/graphql/ent.graphql", Input: `directive @goField(forceResolver: Boolean, name: String, omittable: Boolean) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @goModel(model: String, models: [String!], forceGenerate: Boolean) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
-type AuthSession implements Node {
-  id: ID!
-  data: String!
-  userID: ID
-  user: User
-}
 type Credential implements Node {
   id: ID!
   publicKey: String!
@@ -729,7 +674,6 @@ type User implements Node {
   avatar: String
   finishedRegistration: Boolean!
   lastSignInAt: Time
-  authSessions: AuthSession
   credentials: [Credential!]
   accessTokens: [RefreshToken!]
 }
@@ -1258,198 +1202,6 @@ func (ec *executionContext) fieldContext_AccessToken_viewer(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _AuthSession_id(ctx context.Context, field graphql.CollectedField, obj *ent.AuthSession) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthSession_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.AuthSession().ID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*scalars.GUID)
-	fc.Result = res
-	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthSession_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthSession",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AuthSession_data(ctx context.Context, field graphql.CollectedField, obj *ent.AuthSession) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthSession_data(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Data, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthSession_data(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthSession",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AuthSession_userID(ctx context.Context, field graphql.CollectedField, obj *ent.AuthSession) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthSession_userID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.AuthSession().UserID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*scalars.GUID)
-	fc.Result = res
-	return ec.marshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthSession_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthSession",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AuthSession_user(ctx context.Context, field graphql.CollectedField, obj *ent.AuthSession) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthSession_user(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.User(ctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*ent.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthSession_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthSession",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "name":
-				return ec.fieldContext_User_name(ctx, field)
-			case "email":
-				return ec.fieldContext_User_email(ctx, field)
-			case "password":
-				return ec.fieldContext_User_password(ctx, field)
-			case "avatar":
-				return ec.fieldContext_User_avatar(ctx, field)
-			case "finishedRegistration":
-				return ec.fieldContext_User_finishedRegistration(ctx, field)
-			case "lastSignInAt":
-				return ec.fieldContext_User_lastSignInAt(ctx, field)
-			case "authSessions":
-				return ec.fieldContext_User_authSessions(ctx, field)
-			case "credentials":
-				return ec.fieldContext_User_credentials(ctx, field)
-			case "accessTokens":
-				return ec.fieldContext_User_accessTokens(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _AuthnRegistrationResponse_credentialCreation(ctx context.Context, field graphql.CollectedField, obj *model.AuthnRegistrationResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AuthnRegistrationResponse_credentialCreation(ctx, field)
 	if err != nil {
@@ -1679,8 +1431,6 @@ func (ec *executionContext) fieldContext_Credential_user(_ context.Context, fiel
 				return ec.fieldContext_User_finishedRegistration(ctx, field)
 			case "lastSignInAt":
 				return ec.fieldContext_User_lastSignInAt(ctx, field)
-			case "authSessions":
-				return ec.fieldContext_User_authSessions(ctx, field)
 			case "credentials":
 				return ec.fieldContext_User_credentials(ctx, field)
 			case "accessTokens":
@@ -2761,8 +2511,6 @@ func (ec *executionContext) fieldContext_RefreshToken_user(_ context.Context, fi
 				return ec.fieldContext_User_finishedRegistration(ctx, field)
 			case "lastSignInAt":
 				return ec.fieldContext_User_lastSignInAt(ctx, field)
-			case "authSessions":
-				return ec.fieldContext_User_authSessions(ctx, field)
 			case "credentials":
 				return ec.fieldContext_User_credentials(ctx, field)
 			case "accessTokens":
@@ -3070,57 +2818,6 @@ func (ec *executionContext) fieldContext_User_lastSignInAt(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _User_authSessions(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_authSessions(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AuthSessions(ctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*ent.AuthSession)
-	fc.Result = res
-	return ec.marshalOAuthSession2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐAuthSession(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_authSessions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_AuthSession_id(ctx, field)
-			case "data":
-				return ec.fieldContext_AuthSession_data(ctx, field)
-			case "userID":
-				return ec.fieldContext_AuthSession_userID(ctx, field)
-			case "user":
-				return ec.fieldContext_AuthSession_user(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type AuthSession", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _User_credentials(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_credentials(ctx, field)
 	if err != nil {
@@ -3284,8 +2981,6 @@ func (ec *executionContext) fieldContext_Viewer_profile(_ context.Context, field
 				return ec.fieldContext_User_finishedRegistration(ctx, field)
 			case "lastSignInAt":
 				return ec.fieldContext_User_lastSignInAt(ctx, field)
-			case "authSessions":
-				return ec.fieldContext_User_authSessions(ctx, field)
 			case "credentials":
 				return ec.fieldContext_User_credentials(ctx, field)
 			case "accessTokens":
@@ -5409,11 +5104,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case *ent.AuthSession:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._AuthSession(ctx, sel, obj)
 	case *ent.Credential:
 		if obj == nil {
 			return graphql.Null
@@ -5464,147 +5154,6 @@ func (ec *executionContext) _AccessToken(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var authSessionImplementors = []string{"AuthSession", "Node"}
-
-func (ec *executionContext) _AuthSession(ctx context.Context, sel ast.SelectionSet, obj *ent.AuthSession) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, authSessionImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("AuthSession")
-		case "id":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._AuthSession_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "data":
-			out.Values[i] = ec._AuthSession_data(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "userID":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._AuthSession_userID(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "user":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._AuthSession_user(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6215,39 +5764,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "lastSignInAt":
 			out.Values[i] = ec._User_lastSignInAt(ctx, field, obj)
-		case "authSessions":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._User_authSessions(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "credentials":
 			field := field
 
@@ -7244,13 +6760,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAuthSession2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐAuthSession(ctx context.Context, sel ast.SelectionSet, v *ent.AuthSession) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._AuthSession(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7482,13 +6991,6 @@ func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v an
 func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
 	res := graphql.MarshalTime(v)
 	return res
-}
-
-func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐUser(ctx context.Context, sel ast.SelectionSet, v *ent.User) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

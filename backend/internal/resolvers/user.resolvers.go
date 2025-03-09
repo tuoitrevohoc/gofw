@@ -66,6 +66,11 @@ func (r *mutationResolver) SignIn(ctx context.Context, input model.SignInInput) 
 		return nil, err
 	}
 
+	passwordMatch := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
+	if passwordMatch != nil {
+		return nil, fmt.Errorf("invalid password")
+	}
+
 	token, err := r.authenticationService.Login(ctx, user)
 	if err != nil {
 		return nil, err

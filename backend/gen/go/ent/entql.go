@@ -3,7 +3,6 @@
 package ent
 
 import (
-	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/predicate"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
@@ -17,23 +16,8 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 4)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 3)}
 	graph.Nodes[0] = &sqlgraph.Node{
-		NodeSpec: sqlgraph.NodeSpec{
-			Table:   authsession.Table,
-			Columns: authsession.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: authsession.FieldID,
-			},
-		},
-		Type: "AuthSession",
-		Fields: map[string]*sqlgraph.FieldSpec{
-			authsession.FieldData:   {Type: field.TypeString, Column: authsession.FieldData},
-			authsession.FieldUserID: {Type: field.TypeInt, Column: authsession.FieldUserID},
-		},
-	}
-	graph.Nodes[1] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   credential.Table,
 			Columns: credential.Columns,
@@ -48,7 +32,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			credential.FieldData:      {Type: field.TypeString, Column: credential.FieldData},
 		},
 	}
-	graph.Nodes[2] = &sqlgraph.Node{
+	graph.Nodes[1] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   refreshtoken.Table,
 			Columns: refreshtoken.Columns,
@@ -67,7 +51,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			refreshtoken.FieldUserAgent: {Type: field.TypeString, Column: refreshtoken.FieldUserAgent},
 		},
 	}
-	graph.Nodes[3] = &sqlgraph.Node{
+	graph.Nodes[2] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -86,18 +70,6 @@ var schemaGraph = func() *sqlgraph.Schema {
 			user.FieldLastSignInAt:         {Type: field.TypeTime, Column: user.FieldLastSignInAt},
 		},
 	}
-	graph.MustAddE(
-		"user",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
-			Table:   authsession.UserTable,
-			Columns: []string{authsession.UserColumn},
-			Bidi:    false,
-		},
-		"AuthSession",
-		"User",
-	)
 	graph.MustAddE(
 		"user",
 		&sqlgraph.EdgeSpec{
@@ -121,18 +93,6 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"RefreshToken",
 		"User",
-	)
-	graph.MustAddE(
-		"auth_sessions",
-		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: false,
-			Table:   user.AuthSessionsTable,
-			Columns: []string{user.AuthSessionsColumn},
-			Bidi:    false,
-		},
-		"User",
-		"AuthSession",
 	)
 	graph.MustAddE(
 		"credentials",
@@ -168,70 +128,6 @@ type predicateAdder interface {
 }
 
 // addPredicate implements the predicateAdder interface.
-func (asq *AuthSessionQuery) addPredicate(pred func(s *sql.Selector)) {
-	asq.predicates = append(asq.predicates, pred)
-}
-
-// Filter returns a Filter implementation to apply filters on the AuthSessionQuery builder.
-func (asq *AuthSessionQuery) Filter() *AuthSessionFilter {
-	return &AuthSessionFilter{config: asq.config, predicateAdder: asq}
-}
-
-// addPredicate implements the predicateAdder interface.
-func (m *AuthSessionMutation) addPredicate(pred func(s *sql.Selector)) {
-	m.predicates = append(m.predicates, pred)
-}
-
-// Filter returns an entql.Where implementation to apply filters on the AuthSessionMutation builder.
-func (m *AuthSessionMutation) Filter() *AuthSessionFilter {
-	return &AuthSessionFilter{config: m.config, predicateAdder: m}
-}
-
-// AuthSessionFilter provides a generic filtering capability at runtime for AuthSessionQuery.
-type AuthSessionFilter struct {
-	predicateAdder
-	config
-}
-
-// Where applies the entql predicate on the query filter.
-func (f *AuthSessionFilter) Where(p entql.P) {
-	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[0].Type, p, s); err != nil {
-			s.AddError(err)
-		}
-	})
-}
-
-// WhereID applies the entql int predicate on the id field.
-func (f *AuthSessionFilter) WhereID(p entql.IntP) {
-	f.Where(p.Field(authsession.FieldID))
-}
-
-// WhereData applies the entql string predicate on the data field.
-func (f *AuthSessionFilter) WhereData(p entql.StringP) {
-	f.Where(p.Field(authsession.FieldData))
-}
-
-// WhereUserID applies the entql int predicate on the user_id field.
-func (f *AuthSessionFilter) WhereUserID(p entql.IntP) {
-	f.Where(p.Field(authsession.FieldUserID))
-}
-
-// WhereHasUser applies a predicate to check if query has an edge user.
-func (f *AuthSessionFilter) WhereHasUser() {
-	f.Where(entql.HasEdge("user"))
-}
-
-// WhereHasUserWith applies a predicate to check if query has an edge user with a given conditions (other predicates).
-func (f *AuthSessionFilter) WhereHasUserWith(preds ...predicate.User) {
-	f.Where(entql.HasEdgeWith("user", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
-}
-
-// addPredicate implements the predicateAdder interface.
 func (cq *CredentialQuery) addPredicate(pred func(s *sql.Selector)) {
 	cq.predicates = append(cq.predicates, pred)
 }
@@ -260,7 +156,7 @@ type CredentialFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *CredentialFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[1].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[0].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -324,7 +220,7 @@ type RefreshTokenFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *RefreshTokenFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[1].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -408,7 +304,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -447,20 +343,6 @@ func (f *UserFilter) WhereFinishedRegistration(p entql.BoolP) {
 // WhereLastSignInAt applies the entql time.Time predicate on the last_sign_in_at field.
 func (f *UserFilter) WhereLastSignInAt(p entql.TimeP) {
 	f.Where(p.Field(user.FieldLastSignInAt))
-}
-
-// WhereHasAuthSessions applies a predicate to check if query has an edge auth_sessions.
-func (f *UserFilter) WhereHasAuthSessions() {
-	f.Where(entql.HasEdge("auth_sessions"))
-}
-
-// WhereHasAuthSessionsWith applies a predicate to check if query has an edge auth_sessions with a given conditions (other predicates).
-func (f *UserFilter) WhereHasAuthSessionsWith(preds ...predicate.AuthSession) {
-	f.Where(entql.HasEdgeWith("auth_sessions", sqlgraph.WrapFunc(func(s *sql.Selector) {
-		for _, p := range preds {
-			p(s)
-		}
-	})))
 }
 
 // WhereHasCredentials applies a predicate to check if query has an edge credentials.

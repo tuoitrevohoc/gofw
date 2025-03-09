@@ -3,3 +3,4 @@ db_url:
 domain:
 origin:
 jwt_secret:
+redis_url: "redis:6379"

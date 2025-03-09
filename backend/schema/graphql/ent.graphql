@@ -1,11 +1,5 @@
 directive @goField(forceResolver: Boolean, name: String, omittable: Boolean) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @goModel(model: String, models: [String!], forceGenerate: Boolean) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
-type AuthSession implements Node {
-  id: ID!
-  data: String!
-  userID: ID
-  user: User
-}
 type Credential implements Node {
   id: ID!
   publicKey: String!
@@ -104,7 +98,6 @@ type User implements Node {
   avatar: String
   finishedRegistration: Boolean!
   lastSignInAt: Time
-  authSessions: AuthSession
   credentials: [Credential!]
   accessTokens: [RefreshToken!]
 }

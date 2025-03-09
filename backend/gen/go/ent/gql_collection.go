@@ -6,95 +6,10 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
-
-// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
-func (as *AuthSessionQuery) CollectFields(ctx context.Context, satisfies ...string) (*AuthSessionQuery, error) {
-	fc := graphql.GetFieldContext(ctx)
-	if fc == nil {
-		return as, nil
-	}
-	if err := as.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
-		return nil, err
-	}
-	return as, nil
-}
-
-func (as *AuthSessionQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
-	path = append([]string(nil), path...)
-	var (
-		unknownSeen    bool
-		fieldSeen      = make(map[string]struct{}, len(authsession.Columns))
-		selectedFields = []string{authsession.FieldID}
-	)
-	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
-		switch field.Name {
-
-		case "user":
-			var (
-				alias = field.Alias
-				path  = append(path, alias)
-				query = (&UserClient{config: as.config}).Query()
-			)
-			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
-				return err
-			}
-			as.withUser = query
-			if _, ok := fieldSeen[authsession.FieldUserID]; !ok {
-				selectedFields = append(selectedFields, authsession.FieldUserID)
-				fieldSeen[authsession.FieldUserID] = struct{}{}
-			}
-		case "data":
-			if _, ok := fieldSeen[authsession.FieldData]; !ok {
-				selectedFields = append(selectedFields, authsession.FieldData)
-				fieldSeen[authsession.FieldData] = struct{}{}
-			}
-		case "userID":
-			if _, ok := fieldSeen[authsession.FieldUserID]; !ok {
-				selectedFields = append(selectedFields, authsession.FieldUserID)
-				fieldSeen[authsession.FieldUserID] = struct{}{}
-			}
-		case "id":
-		case "__typename":
-		default:
-			unknownSeen = true
-		}
-	}
-	if !unknownSeen {
-		as.Select(selectedFields...)
-	}
-	return nil
-}
-
-type authsessionPaginateArgs struct {
-	first, last   *int
-	after, before *Cursor
-	opts          []AuthSessionPaginateOption
-}
-
-func newAuthSessionPaginateArgs(rv map[string]any) *authsessionPaginateArgs {
-	args := &authsessionPaginateArgs{}
-	if rv == nil {
-		return args
-	}
-	if v := rv[firstField]; v != nil {
-		args.first = v.(*int)
-	}
-	if v := rv[lastField]; v != nil {
-		args.last = v.(*int)
-	}
-	if v := rv[afterField]; v != nil {
-		args.after = v.(*Cursor)
-	}
-	if v := rv[beforeField]; v != nil {
-		args.before = v.(*Cursor)
-	}
-	return args
-}
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (c *CredentialQuery) CollectFields(ctx context.Context, satisfies ...string) (*CredentialQuery, error) {
@@ -297,17 +212,6 @@ func (u *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *graph
 	)
 	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
 		switch field.Name {
-
-		case "authSessions":
-			var (
-				alias = field.Alias
-				path  = append(path, alias)
-				query = (&AuthSessionClient{config: u.config}).Query()
-			)
-			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, authsessionImplementors)...); err != nil {
-				return err
-			}
-			u.withAuthSessions = query
 
 		case "credentials":
 			var (

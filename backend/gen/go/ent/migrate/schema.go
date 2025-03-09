@@ -9,33 +9,6 @@ import (
 )
 
 var (
-	// AuthSessionsColumns holds the columns for the "auth_sessions" table.
-	AuthSessionsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "data", Type: field.TypeString},
-		{Name: "user_id", Type: field.TypeInt, Unique: true, Nullable: true},
-	}
-	// AuthSessionsTable holds the schema information for the "auth_sessions" table.
-	AuthSessionsTable = &schema.Table{
-		Name:       "auth_sessions",
-		Columns:    AuthSessionsColumns,
-		PrimaryKey: []*schema.Column{AuthSessionsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "auth_sessions_users_auth_sessions",
-				Columns:    []*schema.Column{AuthSessionsColumns[2]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "authsession_user_id",
-				Unique:  false,
-				Columns: []*schema.Column{AuthSessionsColumns[2]},
-			},
-		},
-	}
 	// CredentialsColumns holds the columns for the "credentials" table.
 	CredentialsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -114,7 +87,6 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		AuthSessionsTable,
 		CredentialsTable,
 		RefreshTokensTable,
 		UsersTable,
@@ -122,10 +94,6 @@ var (
 )
 
 func init() {
-	AuthSessionsTable.ForeignKeys[0].RefTable = UsersTable
-	AuthSessionsTable.Annotation = &entsql.Annotation{
-		IncrementStart: func(i int) *int { return &i }(0),
-	}
 	CredentialsTable.ForeignKeys[0].RefTable = UsersTable
 	CredentialsTable.Annotation = &entsql.Annotation{
 		IncrementStart: func(i int) *int { return &i }(4294967296),

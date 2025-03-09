@@ -9,18 +9,6 @@ import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
 )
 
-// The AuthSessionFunc type is an adapter to allow the use of ordinary
-// function as AuthSession mutator.
-type AuthSessionFunc func(context.Context, *ent.AuthSessionMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f AuthSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.AuthSessionMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuthSessionMutation", m)
-}
-
 // The CredentialFunc type is an adapter to allow the use of ordinary
 // function as Credential mutator.
 type CredentialFunc func(context.Context, *ent.CredentialMutation) (ent.Value, error)

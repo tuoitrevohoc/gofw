@@ -14,7 +14,6 @@ import (
 	"entgo.io/ent/dialect/sql/schema"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/hashicorp/go-multierror"
-	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
@@ -25,11 +24,6 @@ import (
 type Noder interface {
 	IsNode()
 }
-
-var authsessionImplementors = []string{"AuthSession", "Node"}
-
-// IsNode implements the Node interface check for GQLGen.
-func (*AuthSession) IsNode() {}
 
 var credentialImplementors = []string{"Credential", "Node"}
 
@@ -104,15 +98,6 @@ func (c *Client) Noder(ctx context.Context, id int, opts ...NodeOption) (_ Noder
 
 func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error) {
 	switch table {
-	case authsession.Table:
-		query := c.AuthSession.Query().
-			Where(authsession.ID(id))
-		if fc := graphql.GetFieldContext(ctx); fc != nil {
-			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, authsessionImplementors...); err != nil {
-				return nil, err
-			}
-		}
-		return query.Only(ctx)
 	case credential.Table:
 		query := c.Credential.Query().
 			Where(credential.ID(id))
@@ -213,22 +198,6 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		idmap[id] = append(idmap[id], &noders[i])
 	}
 	switch table {
-	case authsession.Table:
-		query := c.AuthSession.Query().
-			Where(authsession.IDIn(ids...))
-		query, err := query.CollectFields(ctx, authsessionImplementors...)
-		if err != nil {
-			return nil, err
-		}
-		nodes, err := query.All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, node := range nodes {
-			for _, noder := range idmap[node.ID] {
-				*noder = node
-			}
-		}
 	case credential.Table:
 		query := c.Credential.Query().
 			Where(credential.IDIn(ids...))

@@ -8,14 +8,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
-func (as *AuthSession) User(ctx context.Context) (*User, error) {
-	result, err := as.Edges.UserOrErr()
-	if IsNotLoaded(err) {
-		result, err = as.QueryUser().Only(ctx)
-	}
-	return result, MaskNotFound(err)
-}
-
 func (c *Credential) User(ctx context.Context) (*User, error) {
 	result, err := c.Edges.UserOrErr()
 	if IsNotLoaded(err) {
@@ -30,14 +22,6 @@ func (rt *RefreshToken) User(ctx context.Context) (*User, error) {
 		result, err = rt.QueryUser().Only(ctx)
 	}
 	return result, err
-}
-
-func (u *User) AuthSessions(ctx context.Context) (*AuthSession, error) {
-	result, err := u.Edges.AuthSessionsOrErr()
-	if IsNotLoaded(err) {
-		result, err = u.QueryAuthSessions().Only(ctx)
-	}
-	return result, MaskNotFound(err)
 }
 
 func (u *User) Credentials(ctx context.Context) (result []*Credential, err error) {

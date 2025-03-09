@@ -43,7 +43,6 @@ func (User) Fields() []ent.Field {
 
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("auth_sessions", AuthSession.Type).Unique(),
 		edge.To("credentials", Credential.Type),
 		edge.To("access_tokens", RefreshToken.Type),
 	}

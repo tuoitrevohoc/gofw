@@ -13,6 +13,7 @@ type AppConfig struct {
 	Domain    string `mapstructure:"domain"`
 	Origin    string `mapstructure:"origin"`
 	JwtSecret string `mapstructure:"jwt_secret"`
+	RedisUrl  string `mapstructure:"redis_url"`
 }
 
 func LoadAppConfig() (*AppConfig, error) {

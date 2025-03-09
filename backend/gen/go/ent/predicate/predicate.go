@@ -6,9 +6,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// AuthSession is the predicate function for authsession builders.
-type AuthSession func(*sql.Selector)
-
 // Credential is the predicate function for credential builders.
 type Credential func(*sql.Selector)
 

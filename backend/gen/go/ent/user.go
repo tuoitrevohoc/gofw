@@ -9,7 +9,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
 
@@ -38,37 +37,24 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// AuthSessions holds the value of the auth_sessions edge.
-	AuthSessions *AuthSession `json:"auth_sessions,omitempty"`
 	// Credentials holds the value of the credentials edge.
 	Credentials []*Credential `json:"credentials,omitempty"`
 	// AccessTokens holds the value of the access_tokens edge.
 	AccessTokens []*RefreshToken `json:"access_tokens,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [2]bool
 	// totalCount holds the count of the edges above.
-	totalCount [3]map[string]int
+	totalCount [2]map[string]int
 
 	namedCredentials  map[string][]*Credential
 	namedAccessTokens map[string][]*RefreshToken
 }
 
-// AuthSessionsOrErr returns the AuthSessions value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e UserEdges) AuthSessionsOrErr() (*AuthSession, error) {
-	if e.AuthSessions != nil {
-		return e.AuthSessions, nil
-	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: authsession.Label}
-	}
-	return nil, &NotLoadedError{edge: "auth_sessions"}
-}
-
 // CredentialsOrErr returns the Credentials value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) CredentialsOrErr() ([]*Credential, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		return e.Credentials, nil
 	}
 	return nil, &NotLoadedError{edge: "credentials"}
@@ -77,7 +63,7 @@ func (e UserEdges) CredentialsOrErr() ([]*Credential, error) {
 // AccessTokensOrErr returns the AccessTokens value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) AccessTokensOrErr() ([]*RefreshToken, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.AccessTokens, nil
 	}
 	return nil, &NotLoadedError{edge: "access_tokens"}
@@ -164,11 +150,6 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
-}
-
-// QueryAuthSessions queries the "auth_sessions" edge of the User entity.
-func (u *User) QueryAuthSessions() *AuthSessionQuery {
-	return NewUserClient(u.config).QueryAuthSessions(u)
 }
 
 // QueryCredentials queries the "credentials" edge of the User entity.

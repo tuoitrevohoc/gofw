@@ -5,7 +5,6 @@ package ent
 import (
 	"time"
 
-	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/authsession"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
@@ -16,12 +15,6 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	authsessionFields := models.AuthSession{}.Fields()
-	_ = authsessionFields
-	// authsessionDescData is the schema descriptor for data field.
-	authsessionDescData := authsessionFields[0].Descriptor()
-	// authsession.DataValidator is a validator for the "data" field. It is called by the builders before save.
-	authsession.DataValidator = authsessionDescData.Validators[0].(func(string) error)
 	credentialFields := models.Credential{}.Fields()
 	_ = credentialFields
 	// credentialDescPublicKey is the schema descriptor for public_key field.

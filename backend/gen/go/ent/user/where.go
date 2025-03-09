@@ -435,29 +435,6 @@ func LastSignInAtNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldLastSignInAt))
 }
 
-// HasAuthSessions applies the HasEdge predicate on the "auth_sessions" edge.
-func HasAuthSessions() predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, AuthSessionsTable, AuthSessionsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasAuthSessionsWith applies the HasEdge predicate on the "auth_sessions" edge with a given conditions (other predicates).
-func HasAuthSessionsWith(preds ...predicate.AuthSession) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := newAuthSessionsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasCredentials applies the HasEdge predicate on the "credentials" edge.
 func HasCredentials() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

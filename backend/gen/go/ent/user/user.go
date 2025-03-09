@@ -24,21 +24,12 @@ const (
 	FieldFinishedRegistration = "finished_registration"
 	// FieldLastSignInAt holds the string denoting the last_sign_in_at field in the database.
 	FieldLastSignInAt = "last_sign_in_at"
-	// EdgeAuthSessions holds the string denoting the auth_sessions edge name in mutations.
-	EdgeAuthSessions = "auth_sessions"
 	// EdgeCredentials holds the string denoting the credentials edge name in mutations.
 	EdgeCredentials = "credentials"
 	// EdgeAccessTokens holds the string denoting the access_tokens edge name in mutations.
 	EdgeAccessTokens = "access_tokens"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// AuthSessionsTable is the table that holds the auth_sessions relation/edge.
-	AuthSessionsTable = "auth_sessions"
-	// AuthSessionsInverseTable is the table name for the AuthSession entity.
-	// It exists in this package in order to avoid circular dependency with the "authsession" package.
-	AuthSessionsInverseTable = "auth_sessions"
-	// AuthSessionsColumn is the table column denoting the auth_sessions relation/edge.
-	AuthSessionsColumn = "user_id"
 	// CredentialsTable is the table that holds the credentials relation/edge.
 	CredentialsTable = "credentials"
 	// CredentialsInverseTable is the table name for the Credential entity.
@@ -121,13 +112,6 @@ func ByLastSignInAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastSignInAt, opts...).ToFunc()
 }
 
-// ByAuthSessionsField orders the results by auth_sessions field.
-func ByAuthSessionsField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAuthSessionsStep(), sql.OrderByField(field, opts...))
-	}
-}
-
 // ByCredentialsCount orders the results by credentials count.
 func ByCredentialsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -154,13 +138,6 @@ func ByAccessTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newAccessTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
-}
-func newAuthSessionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AuthSessionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2O, false, AuthSessionsTable, AuthSessionsColumn),
-	)
 }
 func newCredentialsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
