@@ -6,6 +6,7 @@ import {
   TextField,
   Typography,
   Alert,
+  Box,
 } from "@mui/material";
 import { useCallback, useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
@@ -170,38 +171,44 @@ export default function RegisterPage() {
         >
           Continue with no password
         </Button>
-        <Divider>
-          <Typography variant="body2" color="text.secondary">
-            Or use a password
-          </Typography>
-        </Divider>
-        <>
-          <TextField
-            fullWidth
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            label="Password"
-          />
-          <TextField
-            fullWidth
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            error={password !== confirmPassword}
-            label="Confirm Password"
-          />
-        </>
-        <Button
-          disabled={!isValidateForm(email, password, confirmPassword, true)}
-          fullWidth
-          variant="outlined"
-          size="large"
-          onClick={handleSignUp}
-          loading={loading}
-        >
-          Register
-        </Button>
+        {email.length > 0 && (
+          <>
+            <Divider>
+              <Typography variant="body2" color="text.secondary">
+                Or use a password
+              </Typography>
+            </Divider>
+            <>
+              <TextField
+                fullWidth
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                label="Password"
+              />
+              {password.length > 0 && (
+                <TextField
+                  fullWidth
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  error={password !== confirmPassword}
+                  label="Confirm Password"
+                />
+              )}
+            </>
+            <Button
+              disabled={!isValidateForm(email, password, confirmPassword, true)}
+              fullWidth
+              variant="outlined"
+              size="large"
+              onClick={handleSignUp}
+              loading={loading}
+            >
+              Register
+            </Button>
+          </>
+        )}
       </Stack>
     </Stack>
   );

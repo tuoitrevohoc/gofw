@@ -3,11 +3,15 @@ interface AccessToken {
   expiry: number;
 }
 
-export function handleLogin(viewer: AccessToken) {
+function saveToken(viewer: AccessToken) {
   sessionStorage.setItem("accessToken", viewer.accessToken);
   sessionStorage.setItem("expiresAt", viewer.expiry.toString());
+}
 
-  console.log(viewer.accessToken, viewer.expiry);
+export function handleLogin(viewer: AccessToken) {
+  saveToken(viewer);
+
+  location.href = "/";
 }
 
 export function handleLogout() {
@@ -31,7 +35,7 @@ export async function refreshToken() {
   }
 
   const data: AccessToken = await response.json();
-  handleLogin(data);
+  saveToken(data);
   return data.accessToken;
 }
 

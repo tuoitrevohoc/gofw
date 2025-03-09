@@ -1,14 +1,18 @@
 import {
   Button,
-  Divider,
   Link,
   Stack,
   TextField,
   Typography,
   Alert,
+  IconButton,
 } from "@mui/material";
 import { useCallback, useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import getErrorMessage from "../../relay/getErrorMessage";
+import { handleLogin } from "../../auth";
+import useSignInMutation from "../../relay/mutations/signIn";
+import { KeyRounded } from "@mui/icons-material";
 
 function isValidateForm(email: string, password: string) {
   return email.length > 0 && password.length > 0;
@@ -20,6 +24,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const [commitSignIn, isSigningIn] = useSignInMutation();
+
   const onError = useCallback(
     function (error: Error) {
       const errorMessage = getErrorMessage(error);
@@ -27,6 +33,22 @@ export default function LoginPage() {
     },
     [setError]
   );
+
+  const onSignIn = useCallback(() => {
+    commitSignIn({
+      variables: {
+        input: {
+          email,
+          password,
+        },
+      },
+      onCompleted: (data) => {
+        handleLogin(data.signIn);
+        navigate("/");
+      },
+      onError,
+    });
+  }, [email, password, commitSignIn, navigate, onError]);
 
   return (
     <Stack direction="column" gap={1.5} alignItems="center" width="100%">
@@ -49,23 +71,40 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           label="Email"
+          slotProps={{
+            input: {
+              endAdornment: (
+                <IconButton>
+                  <KeyRounded />
+                </IconButton>
+              ),
+            },
+          }}
         />
 
-        <TextField
-          fullWidth
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          label="Password"
-        />
-        <Button
-          disabled={!isValidateForm(email, password)}
-          fullWidth
-          variant="outlined"
-          size="large"
-          onClick={() => {}}
-        >
-          Register
+        {email.length > 0 && (
+          <>
+            <TextField
+              fullWidth
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              label="Password"
+            />
+            <Button
+              disabled={!isValidateForm(email, password)}
+              fullWidth
+              variant="outlined"
+              size="large"
+              onClick={onSignIn}
+              loading={isSigningIn}
+            >
+              Login
+            </Button>
+          </>
+        )}
+        <Button fullWidth variant="outlined" size="large" onClick={onSignIn}>
+          Login with passkey
         </Button>
       </Stack>
     </Stack>
