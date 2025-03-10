@@ -9,7 +9,7 @@ import (
 )
 
 type TimedCache interface {
-	Get(ctx context.Context, key string, value interface{}) (bool, error)
+	Get(ctx context.Context, key string, value interface{}) error
 	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
 	Delete(ctx context.Context, key string) error
 }
@@ -25,18 +25,18 @@ func NewTimedCache(redis *redis.Client) TimedCache {
 	}
 }
 
-func (c *timedCache) Get(ctx context.Context, key string, value interface{}) (bool, error) {
+func (c *timedCache) Get(ctx context.Context, key string, value interface{}) error {
 	result, err := c.redis.Get(ctx, key).Result()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	err = json.Unmarshal([]byte(result), value)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return true, nil
+	return nil
 }
 
 func (c *timedCache) Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error {

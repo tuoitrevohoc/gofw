@@ -13,6 +13,10 @@ type AccessToken struct {
 	Viewer      *Viewer `json:"viewer"`
 }
 
+type AuthnLoginResponse struct {
+	CredentialRequest string `json:"credentialRequest"`
+}
+
 type AuthnRegistrationResponse struct {
 	CredentialCreation string `json:"credentialCreation"`
 }

@@ -11,11 +11,33 @@ import { useCallback, useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import getErrorMessage from "../../relay/getErrorMessage";
 import { handleLogin } from "../../auth";
-import useSignInMutation from "../../relay/mutations/signIn";
+import {
+  useSignInMutation,
+  useSignInBeginMutation,
+  useSignInFinishMutation,
+} from "../../relay/mutations/signIn";
 import { KeyRounded } from "@mui/icons-material";
+import { stringToArrayBuffer, base64Encode } from "../../utils/encoding";
 
 function isValidateForm(email: string, password: string) {
   return email.length > 0 && password.length > 0;
+}
+
+function encodeCredential(credential: PublicKeyCredential) {
+  const response = credential.response as AuthenticatorAssertionResponse;
+  return JSON.stringify({
+    id: credential.id,
+    type: credential.type,
+    rawId: base64Encode(credential.rawId),
+    response: {
+      authenticatorData: base64Encode(response.authenticatorData),
+      clientDataJSON: base64Encode(response.clientDataJSON),
+      signature: base64Encode(response.signature),
+      userHandle: response.userHandle
+        ? base64Encode(response.userHandle)
+        : null,
+    },
+  });
 }
 
 export default function LoginPage() {
@@ -23,8 +45,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-
   const [commitSignIn, isSigningIn] = useSignInMutation();
+  const [commitSignInBegin, isSigningInBegin] = useSignInBeginMutation();
+  const [commitSignInFinish] = useSignInFinishMutation();
 
   const onError = useCallback(
     function (error: Error) {
@@ -50,6 +73,54 @@ export default function LoginPage() {
     });
   }, [email, password, commitSignIn, navigate, onError]);
 
+  const onSignInBegin = useCallback(() => {
+    async function startLogin(requestJSON: string) {
+      try {
+        const request = JSON.parse(requestJSON);
+        console.log(request);
+        request.publicKey.challenge = stringToArrayBuffer(
+          request.publicKey.challenge
+        );
+
+        if (request.publicKey?.user?.id) {
+          request.publicKey.user.id = stringToArrayBuffer(
+            request.publicKey.user.id
+          );
+        }
+
+        const credential = await navigator.credentials.get(request);
+
+        if (!credential) {
+          return;
+        }
+
+        const encodedCredential = encodeCredential(
+          credential as PublicKeyCredential
+        );
+
+        commitSignInFinish({
+          variables: { response: encodedCredential },
+          onCompleted: (data) => {
+            handleLogin(data.finishAuthnLogin);
+            navigate("/");
+          },
+          onError,
+        });
+      } catch (error) {
+        console.error(error);
+        setError("Failed to create credential");
+      }
+    }
+
+    commitSignInBegin({
+      variables: {},
+      onCompleted: (data) => {
+        startLogin(data.beginAuthnLogin.credentialRequest);
+      },
+      onError,
+    });
+  }, [commitSignInBegin, commitSignInFinish, onError, navigate]);
+
   return (
     <Stack direction="column" gap={1.5} alignItems="center" width="100%">
       <Typography variant="h5">Login</Typography>
@@ -74,7 +145,7 @@ export default function LoginPage() {
           slotProps={{
             input: {
               endAdornment: (
-                <IconButton>
+                <IconButton onClick={onSignInBegin}>
                   <KeyRounded />
                 </IconButton>
               ),
@@ -103,7 +174,13 @@ export default function LoginPage() {
             </Button>
           </>
         )}
-        <Button fullWidth variant="outlined" size="large" onClick={onSignIn}>
+        <Button
+          fullWidth
+          variant="outlined"
+          size="large"
+          onClick={onSignInBegin}
+          loading={isSigningInBegin}
+        >
           Login with passkey
         </Button>
       </Stack>

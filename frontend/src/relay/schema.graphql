@@ -31,15 +31,12 @@ type AccessToken {
   viewer: Viewer!
 }
 
-type AuthnRegistrationResponse {
-  credentialCreation: String!
+type AuthnLoginResponse {
+  credentialRequest: String!
 }
 
-type AuthSession implements Node {
-  id: ID!
-  data: String!
-  userID: ID
-  user: User
+type AuthnRegistrationResponse {
+  credentialCreation: String!
 }
 
 type Credential implements Node {
@@ -60,6 +57,8 @@ type Mutation {
   signIn(input: SignInInput!): AccessToken!
   beginAuthnRegistration(email: String!): AuthnRegistrationResponse!
   finishAuthnRegistration(email: String!, response: String!): AccessToken!
+  beginAuthnLogin: AuthnLoginResponse!
+  finishAuthnLogin(response: String!): AccessToken!
 }
 
 """
@@ -147,7 +146,6 @@ type User implements Node {
   avatar: String
   finishedRegistration: Boolean!
   lastSignInAt: Time
-  authSessions: AuthSession
   credentials: [Credential!]
   accessTokens: [RefreshToken!]
 }

@@ -135,6 +135,52 @@ func (r *mutationResolver) FinishAuthnRegistration(ctx context.Context, email st
 	}, nil
 }
 
+// BeginAuthnLogin is the resolver for the beginAuthnLogin field.
+func (r *mutationResolver) BeginAuthnLogin(ctx context.Context) (*model.AuthnLoginResponse, error) {
+	credentialRequest, err := r.authenticator.BeginLogin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert credential to json
+	json, err := json.Marshal(credentialRequest)
+	if err != nil {
+		return nil, fmt.Errorf("something went wrong")
+	}
+
+	return &model.AuthnLoginResponse{
+		CredentialRequest: string(json),
+	}, nil
+}
+
+// FinishAuthnLogin is the resolver for the finishAuthnLogin field.
+func (r *mutationResolver) FinishAuthnLogin(ctx context.Context, response string) (*model.AccessToken, error) {
+	parsedResponse, err := protocol.ParseCredentialRequestResponseBytes([]byte(response))
+	if err != nil {
+		return nil, fmt.Errorf("fail to parse credential request response")
+	}
+
+	user, err := r.authenticator.FinishLogin(ctx, parsedResponse)
+	if err != nil {
+		return nil, fmt.Errorf("fail to finish passkey login")
+	}
+
+	token, err := r.authenticationService.Login(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.AccessToken{
+		AccessToken: token.AccessToken,
+		Expiry:      int(token.Expiry),
+		Viewer: &model.Viewer{
+			UserID:          scalars.NewGUID(usrPkg.Table, user.ID),
+			Profile:         user,
+			IsAuthenticated: true,
+		},
+	}, nil
+}
+
 // Viewer is the resolver for the viewer field.
 func (r *queryResolver) Viewer(ctx context.Context) (*model.Viewer, error) {
 	return auth.ViewerFromContext(ctx), nil

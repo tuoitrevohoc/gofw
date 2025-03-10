@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"strings"
@@ -11,12 +12,38 @@ import (
 
 type WebAuthnUser struct {
 	email string
+	creds []webauthn.Credential
 }
 
 func NewWebAuthnUser(email string) *WebAuthnUser {
 	return &WebAuthnUser{
 		email: email,
+		creds: []webauthn.Credential{},
 	}
+}
+
+func NewWebAuthnUserFromUser(ctx context.Context, user *ent.User) (*WebAuthnUser, error) {
+	creds, err := user.Credentials(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	webCreds := make([]webauthn.Credential, len(creds))
+	for i, cred := range creds {
+		webCred, err := convertToWebAuthnCredential(cred)
+		if err != nil {
+			return nil, err
+		}
+		webCreds[i] = *webCred
+	}
+
+	encodedEmail := base64.StdEncoding.EncodeToString([]byte(user.Email))
+	encodedEmail = strings.TrimRight(encodedEmail, "=")
+
+	return &WebAuthnUser{
+		email: encodedEmail,
+		creds: webCreds,
+	}, nil
 }
 
 func (u *WebAuthnUser) WebAuthnID() []byte {
@@ -32,7 +59,7 @@ func (u *WebAuthnUser) WebAuthnDisplayName() string {
 }
 
 func (u *WebAuthnUser) WebAuthnCredentials() []webauthn.Credential {
-	return []webauthn.Credential{}
+	return u.creds
 }
 
 func encodeSession(session *webauthn.SessionData) *webauthn.SessionData {

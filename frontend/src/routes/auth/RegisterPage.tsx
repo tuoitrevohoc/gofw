@@ -16,6 +16,7 @@ import {
 } from "../../relay/mutations/signUp";
 import getErrorMessage from "../../relay/getErrorMessage";
 import { handleLogin } from "../../auth";
+import { stringToArrayBuffer, base64Encode } from "../../utils/encoding";
 
 function isValidateForm(
   email: string,
@@ -31,18 +32,6 @@ function isValidateForm(
     );
   }
   return email.length > 0;
-}
-
-function stringToArrayBuffer(binaryString: string) {
-  return Uint8Array.from(binaryString, (c) => c.charCodeAt(0)).buffer;
-}
-
-function base64Encode(binary: ArrayBuffer) {
-  const binaryString = String.fromCharCode(...new Uint8Array(binary));
-  return btoa(binaryString)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
 }
 
 function encodeCredential(credential: PublicKeyCredential) {

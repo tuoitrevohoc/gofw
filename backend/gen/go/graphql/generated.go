@@ -60,6 +60,10 @@ type ComplexityRoot struct {
 		Viewer      func(childComplexity int) int
 	}
 
+	AuthnLoginResponse struct {
+		CredentialRequest func(childComplexity int) int
+	}
+
 	AuthnRegistrationResponse struct {
 		CredentialCreation func(childComplexity int) int
 	}
@@ -72,7 +76,9 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		BeginAuthnLogin         func(childComplexity int) int
 		BeginAuthnRegistration  func(childComplexity int, email string) int
+		FinishAuthnLogin        func(childComplexity int, response string) int
 		FinishAuthnRegistration func(childComplexity int, email string, response string) int
 		SignIn                  func(childComplexity int, input model.SignInInput) int
 		SignUp                  func(childComplexity int, input model.SignUpInput) int
@@ -129,6 +135,8 @@ type MutationResolver interface {
 	SignIn(ctx context.Context, input model.SignInInput) (*model.AccessToken, error)
 	BeginAuthnRegistration(ctx context.Context, email string) (*model.AuthnRegistrationResponse, error)
 	FinishAuthnRegistration(ctx context.Context, email string, response string) (*model.AccessToken, error)
+	BeginAuthnLogin(ctx context.Context) (*model.AuthnLoginResponse, error)
+	FinishAuthnLogin(ctx context.Context, response string) (*model.AccessToken, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id scalars.GUID) (ent.Noder, error)
@@ -185,6 +193,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AccessToken.Viewer(childComplexity), true
 
+	case "AuthnLoginResponse.credentialRequest":
+		if e.complexity.AuthnLoginResponse.CredentialRequest == nil {
+			break
+		}
+
+		return e.complexity.AuthnLoginResponse.CredentialRequest(childComplexity), true
+
 	case "AuthnRegistrationResponse.credentialCreation":
 		if e.complexity.AuthnRegistrationResponse.CredentialCreation == nil {
 			break
@@ -220,6 +235,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Credential.User(childComplexity), true
 
+	case "Mutation.beginAuthnLogin":
+		if e.complexity.Mutation.BeginAuthnLogin == nil {
+			break
+		}
+
+		return e.complexity.Mutation.BeginAuthnLogin(childComplexity), true
+
 	case "Mutation.beginAuthnRegistration":
 		if e.complexity.Mutation.BeginAuthnRegistration == nil {
 			break
@@ -231,6 +253,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.BeginAuthnRegistration(childComplexity, args["email"].(string)), true
+
+	case "Mutation.finishAuthnLogin":
+		if e.complexity.Mutation.FinishAuthnLogin == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_finishAuthnLogin_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FinishAuthnLogin(childComplexity, args["response"].(string)), true
 
 	case "Mutation.finishAuthnRegistration":
 		if e.complexity.Mutation.FinishAuthnRegistration == nil {
@@ -704,6 +738,10 @@ type AuthnRegistrationResponse {
   credentialCreation: String!
 }
 
+type AuthnLoginResponse {
+  credentialRequest: String!
+}
+
 extend type Query {
   viewer: Viewer!
 }
@@ -714,6 +752,9 @@ extend type Mutation {
 
   beginAuthnRegistration(email: String!): AuthnRegistrationResponse!
   finishAuthnRegistration(email: String!, response: String!): AccessToken!
+
+  beginAuthnLogin: AuthnLoginResponse!
+  finishAuthnLogin(response: String!): AccessToken!
 }
 `, BuiltIn: false},
 }
@@ -744,6 +785,34 @@ func (ec *executionContext) field_Mutation_beginAuthnRegistration_argsEmail(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 	if tmp, ok := rawArgs["email"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_finishAuthnLogin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_finishAuthnLogin_argsResponse(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["response"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_finishAuthnLogin_argsResponse(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["response"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("response"))
+	if tmp, ok := rawArgs["response"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
@@ -1197,6 +1266,50 @@ func (ec *executionContext) fieldContext_AccessToken_viewer(_ context.Context, f
 				return ec.fieldContext_Viewer_isAuthenticated(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Viewer", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AuthnLoginResponse_credentialRequest(ctx context.Context, field graphql.CollectedField, obj *model.AuthnLoginResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AuthnLoginResponse_credentialRequest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CredentialRequest, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AuthnLoginResponse_credentialRequest(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AuthnLoginResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1684,6 +1797,117 @@ func (ec *executionContext) fieldContext_Mutation_finishAuthnRegistration(ctx co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_finishAuthnRegistration_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_beginAuthnLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_beginAuthnLogin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().BeginAuthnLogin(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AuthnLoginResponse)
+	fc.Result = res
+	return ec.marshalNAuthnLoginResponse2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋgraphqlᚋmodelᚐAuthnLoginResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_beginAuthnLogin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "credentialRequest":
+				return ec.fieldContext_AuthnLoginResponse_credentialRequest(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthnLoginResponse", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_finishAuthnLogin(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_finishAuthnLogin(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().FinishAuthnLogin(rctx, fc.Args["response"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AccessToken)
+	fc.Result = res
+	return ec.marshalNAccessToken2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋgraphqlᚋmodelᚐAccessToken(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_finishAuthnLogin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accessToken":
+				return ec.fieldContext_AccessToken_accessToken(ctx, field)
+			case "expiry":
+				return ec.fieldContext_AccessToken_expiry(ctx, field)
+			case "viewer":
+				return ec.fieldContext_AccessToken_viewer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AccessToken", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_finishAuthnLogin_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5177,6 +5401,45 @@ func (ec *executionContext) _AccessToken(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var authnLoginResponseImplementors = []string{"AuthnLoginResponse"}
+
+func (ec *executionContext) _AuthnLoginResponse(ctx context.Context, sel ast.SelectionSet, obj *model.AuthnLoginResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, authnLoginResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AuthnLoginResponse")
+		case "credentialRequest":
+			out.Values[i] = ec._AuthnLoginResponse_credentialRequest(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var authnRegistrationResponseImplementors = []string{"AuthnRegistrationResponse"}
 
 func (ec *executionContext) _AuthnRegistrationResponse(ctx context.Context, sel ast.SelectionSet, obj *model.AuthnRegistrationResponse) graphql.Marshaler {
@@ -5375,6 +5638,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "finishAuthnRegistration":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_finishAuthnRegistration(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "beginAuthnLogin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_beginAuthnLogin(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "finishAuthnLogin":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_finishAuthnLogin(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -6277,6 +6554,20 @@ func (ec *executionContext) marshalNAccessToken2ᚖgithubᚗcomᚋtuoitrevohoc�
 		return graphql.Null
 	}
 	return ec._AccessToken(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAuthnLoginResponse2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋgraphqlᚋmodelᚐAuthnLoginResponse(ctx context.Context, sel ast.SelectionSet, v model.AuthnLoginResponse) graphql.Marshaler {
+	return ec._AuthnLoginResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAuthnLoginResponse2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋgraphqlᚋmodelᚐAuthnLoginResponse(ctx context.Context, sel ast.SelectionSet, v *model.AuthnLoginResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AuthnLoginResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNAuthnRegistrationResponse2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋgraphqlᚋmodelᚐAuthnRegistrationResponse(ctx context.Context, sel ast.SelectionSet, v model.AuthnRegistrationResponse) graphql.Marshaler {

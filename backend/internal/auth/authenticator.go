@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
@@ -98,7 +99,6 @@ func (a *Authenticator) BeginRegistration(ctx context.Context, email string) (*p
 	}
 
 	creation, session, err := a.webauthn.BeginRegistration(NewWebAuthnUser(email))
-
 	if err != nil {
 		logger.Error("error beginning registration", zap.Error(err))
 		return nil, err
@@ -132,18 +132,13 @@ func (a *Authenticator) FinishRegistration(ctx context.Context, email string, re
 
 	timedCacheKey := fmt.Sprintf(sessionCacheKey, response.Response.CollectedClientData.Challenge)
 	var authnSession *webauthn.SessionData
-	ok, err := a.timedCache.Get(ctx, timedCacheKey, &authnSession)
 
+	err = a.timedCache.Get(ctx, timedCacheKey, &authnSession)
 	logger.Info("FinishRegistration", zap.String("timedCacheKey", timedCacheKey), zap.Any("authnSession", authnSession))
 
 	if err != nil {
 		logger.Error("error getting timed cache", zap.Error(err))
 		return nil, err
-	}
-
-	if !ok {
-		logger.Error("session not found", zap.String("cachedKey", timedCacheKey))
-		return nil, errors.New("session not found")
 	}
 
 	if string(authnSession.UserID) != email {
@@ -174,6 +169,75 @@ func (a *Authenticator) FinishRegistration(ctx context.Context, email string, re
 
 	if err != nil {
 		logger.Error("Error saving credential", zap.Error(err))
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (a *Authenticator) BeginLogin(ctx context.Context) (*protocol.CredentialAssertion, error) {
+	logger := gofw.ContextLogger(ctx)
+	logger.Info("BeginLogin")
+
+	var request *protocol.CredentialAssertion
+	var session *webauthn.SessionData
+	var err error
+
+	request, session, err = a.webauthn.BeginDiscoverableLogin()
+
+	if err != nil {
+		logger.Error("error beginning login", zap.Error(err))
+		return nil, err
+	}
+
+	session = encodeSession(session)
+	timedCacheKey := fmt.Sprintf(sessionCacheKey, session.Challenge)
+	err = a.timedCache.Set(ctx, timedCacheKey, session, sessionCacheTTL)
+
+	if err != nil {
+		logger.Error("error setting timed cache", zap.Error(err))
+		return nil, err
+	}
+
+	logger.Info("BeginLogin success", zap.String("timedCacheKey", timedCacheKey))
+	return request, nil
+}
+
+func (a *Authenticator) FinishLogin(ctx context.Context, response *protocol.ParsedCredentialAssertionData) (*ent.User, error) {
+	logger := gofw.ContextLogger(ctx)
+	logger.Info("FinishLogin")
+
+	timedCacheKey := fmt.Sprintf(sessionCacheKey, response.Response.CollectedClientData.Challenge)
+	var authnSession webauthn.SessionData
+
+	userHandler, err := base64.StdEncoding.DecodeString(string(response.Response.UserHandle))
+	if err != nil {
+		logger.Error("error decoding user handle", zap.Error(err))
+		return nil, err
+	}
+
+	err = a.timedCache.Get(ctx, timedCacheKey, &authnSession)
+	if err != nil {
+		logger.Error("error getting timed cache", zap.Error(err))
+		return nil, err
+	}
+
+	user, err := a.ent.User.Query().Where(user.Email(string(userHandler))).WithCredentials().Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	webUser, err := NewWebAuthnUserFromUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	authnSession.UserID = response.Response.UserHandle
+
+	_, err = a.webauthn.ValidateLogin(webUser, authnSession, response)
+
+	if err != nil {
+		logger.Error("error validating login", zap.Error(err))
 		return nil, err
 	}
 

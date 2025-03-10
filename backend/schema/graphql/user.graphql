@@ -39,6 +39,6 @@ extend type Mutation {
   beginAuthnRegistration(email: String!): AuthnRegistrationResponse!
   finishAuthnRegistration(email: String!, response: String!): AccessToken!
 
-  beginAuthnLogin(email: String!): AuthnLoginResponse!
-  finishAuthnLogin(email: String!, response: String!): AccessToken!
+  beginAuthnLogin: AuthnLoginResponse!
+  finishAuthnLogin(response: String!): AccessToken!
 }
