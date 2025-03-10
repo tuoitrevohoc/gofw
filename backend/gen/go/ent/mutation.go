@@ -489,6 +489,7 @@ type RefreshTokenMutation struct {
 	refresh_at    *time.Time
 	expire_at     *time.Time
 	ip_address    *string
+	is_active     *bool
 	user_agent    *string
 	clearedFields map[string]struct{}
 	user          *int
@@ -776,6 +777,42 @@ func (m *RefreshTokenMutation) ResetIPAddress() {
 	m.ip_address = nil
 }
 
+// SetIsActive sets the "is_active" field.
+func (m *RefreshTokenMutation) SetIsActive(b bool) {
+	m.is_active = &b
+}
+
+// IsActive returns the value of the "is_active" field in the mutation.
+func (m *RefreshTokenMutation) IsActive() (r bool, exists bool) {
+	v := m.is_active
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsActive returns the old "is_active" field's value of the RefreshToken entity.
+// If the RefreshToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RefreshTokenMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsActive requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+	}
+	return oldValue.IsActive, nil
+}
+
+// ResetIsActive resets all changes to the "is_active" field.
+func (m *RefreshTokenMutation) ResetIsActive() {
+	m.is_active = nil
+}
+
 // SetUserAgent sets the "user_agent" field.
 func (m *RefreshTokenMutation) SetUserAgent(s string) {
 	m.user_agent = &s
@@ -885,7 +922,7 @@ func (m *RefreshTokenMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RefreshTokenMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.token != nil {
 		fields = append(fields, refreshtoken.FieldToken)
 	}
@@ -900,6 +937,9 @@ func (m *RefreshTokenMutation) Fields() []string {
 	}
 	if m.ip_address != nil {
 		fields = append(fields, refreshtoken.FieldIPAddress)
+	}
+	if m.is_active != nil {
+		fields = append(fields, refreshtoken.FieldIsActive)
 	}
 	if m.user_agent != nil {
 		fields = append(fields, refreshtoken.FieldUserAgent)
@@ -922,6 +962,8 @@ func (m *RefreshTokenMutation) Field(name string) (ent.Value, bool) {
 		return m.ExpireAt()
 	case refreshtoken.FieldIPAddress:
 		return m.IPAddress()
+	case refreshtoken.FieldIsActive:
+		return m.IsActive()
 	case refreshtoken.FieldUserAgent:
 		return m.UserAgent()
 	}
@@ -943,6 +985,8 @@ func (m *RefreshTokenMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldExpireAt(ctx)
 	case refreshtoken.FieldIPAddress:
 		return m.OldIPAddress(ctx)
+	case refreshtoken.FieldIsActive:
+		return m.OldIsActive(ctx)
 	case refreshtoken.FieldUserAgent:
 		return m.OldUserAgent(ctx)
 	}
@@ -988,6 +1032,13 @@ func (m *RefreshTokenMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIPAddress(v)
+		return nil
+	case refreshtoken.FieldIsActive:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsActive(v)
 		return nil
 	case refreshtoken.FieldUserAgent:
 		v, ok := value.(string)
@@ -1059,6 +1110,9 @@ func (m *RefreshTokenMutation) ResetField(name string) error {
 		return nil
 	case refreshtoken.FieldIPAddress:
 		m.ResetIPAddress()
+		return nil
+	case refreshtoken.FieldIsActive:
+		m.ResetIsActive()
 		return nil
 	case refreshtoken.FieldUserAgent:
 		m.ResetUserAgent()

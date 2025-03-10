@@ -99,6 +99,20 @@ func (rtu *RefreshTokenUpdate) SetNillableIPAddress(s *string) *RefreshTokenUpda
 	return rtu
 }
 
+// SetIsActive sets the "is_active" field.
+func (rtu *RefreshTokenUpdate) SetIsActive(b bool) *RefreshTokenUpdate {
+	rtu.mutation.SetIsActive(b)
+	return rtu
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (rtu *RefreshTokenUpdate) SetNillableIsActive(b *bool) *RefreshTokenUpdate {
+	if b != nil {
+		rtu.SetIsActive(*b)
+	}
+	return rtu
+}
+
 // SetUserAgent sets the "user_agent" field.
 func (rtu *RefreshTokenUpdate) SetUserAgent(s string) *RefreshTokenUpdate {
 	rtu.mutation.SetUserAgent(s)
@@ -211,6 +225,9 @@ func (rtu *RefreshTokenUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := rtu.mutation.IPAddress(); ok {
 		_spec.SetField(refreshtoken.FieldIPAddress, field.TypeString, value)
+	}
+	if value, ok := rtu.mutation.IsActive(); ok {
+		_spec.SetField(refreshtoken.FieldIsActive, field.TypeBool, value)
 	}
 	if value, ok := rtu.mutation.UserAgent(); ok {
 		_spec.SetField(refreshtoken.FieldUserAgent, field.TypeString, value)
@@ -330,6 +347,20 @@ func (rtuo *RefreshTokenUpdateOne) SetIPAddress(s string) *RefreshTokenUpdateOne
 func (rtuo *RefreshTokenUpdateOne) SetNillableIPAddress(s *string) *RefreshTokenUpdateOne {
 	if s != nil {
 		rtuo.SetIPAddress(*s)
+	}
+	return rtuo
+}
+
+// SetIsActive sets the "is_active" field.
+func (rtuo *RefreshTokenUpdateOne) SetIsActive(b bool) *RefreshTokenUpdateOne {
+	rtuo.mutation.SetIsActive(b)
+	return rtuo
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (rtuo *RefreshTokenUpdateOne) SetNillableIsActive(b *bool) *RefreshTokenUpdateOne {
+	if b != nil {
+		rtuo.SetIsActive(*b)
 	}
 	return rtuo
 }
@@ -476,6 +507,9 @@ func (rtuo *RefreshTokenUpdateOne) sqlSave(ctx context.Context) (_node *RefreshT
 	}
 	if value, ok := rtuo.mutation.IPAddress(); ok {
 		_spec.SetField(refreshtoken.FieldIPAddress, field.TypeString, value)
+	}
+	if value, ok := rtuo.mutation.IsActive(); ok {
+		_spec.SetField(refreshtoken.FieldIsActive, field.TypeBool, value)
 	}
 	if value, ok := rtuo.mutation.UserAgent(); ok {
 		_spec.SetField(refreshtoken.FieldUserAgent, field.TypeString, value)

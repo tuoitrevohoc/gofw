@@ -24,6 +24,8 @@ const (
 	FieldExpireAt = "expire_at"
 	// FieldIPAddress holds the string denoting the ip_address field in the database.
 	FieldIPAddress = "ip_address"
+	// FieldIsActive holds the string denoting the is_active field in the database.
+	FieldIsActive = "is_active"
 	// FieldUserAgent holds the string denoting the user_agent field in the database.
 	FieldUserAgent = "user_agent"
 	// EdgeUser holds the string denoting the user edge name in mutations.
@@ -47,6 +49,7 @@ var Columns = []string{
 	FieldRefreshAt,
 	FieldExpireAt,
 	FieldIPAddress,
+	FieldIsActive,
 	FieldUserAgent,
 }
 
@@ -80,6 +83,8 @@ var (
 	DefaultRefreshAt func() time.Time
 	// IPAddressValidator is a validator for the "ip_address" field. It is called by the builders before save.
 	IPAddressValidator func(string) error
+	// DefaultIsActive holds the default value on creation for the "is_active" field.
+	DefaultIsActive bool
 	// UserAgentValidator is a validator for the "user_agent" field. It is called by the builders before save.
 	UserAgentValidator func(string) error
 )
@@ -115,6 +120,11 @@ func ByExpireAt(opts ...sql.OrderTermOption) OrderOption {
 // ByIPAddress orders the results by the ip_address field.
 func ByIPAddress(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIPAddress, opts...).ToFunc()
+}
+
+// ByIsActive orders the results by the is_active field.
+func ByIsActive(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsActive, opts...).ToFunc()
 }
 
 // ByUserAgent orders the results by the user_agent field.

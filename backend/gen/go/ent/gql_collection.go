@@ -148,6 +148,11 @@ func (rt *RefreshTokenQuery) collectField(ctx context.Context, oneNode bool, opC
 				selectedFields = append(selectedFields, refreshtoken.FieldIPAddress)
 				fieldSeen[refreshtoken.FieldIPAddress] = struct{}{}
 			}
+		case "isActive":
+			if _, ok := fieldSeen[refreshtoken.FieldIsActive]; !ok {
+				selectedFields = append(selectedFields, refreshtoken.FieldIsActive)
+				fieldSeen[refreshtoken.FieldIsActive] = struct{}{}
+			}
 		case "userAgent":
 			if _, ok := fieldSeen[refreshtoken.FieldUserAgent]; !ok {
 				selectedFields = append(selectedFields, refreshtoken.FieldUserAgent)

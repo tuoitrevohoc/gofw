@@ -43,8 +43,12 @@ func init() {
 	refreshtokenDescIPAddress := refreshtokenFields[4].Descriptor()
 	// refreshtoken.IPAddressValidator is a validator for the "ip_address" field. It is called by the builders before save.
 	refreshtoken.IPAddressValidator = refreshtokenDescIPAddress.Validators[0].(func(string) error)
+	// refreshtokenDescIsActive is the schema descriptor for is_active field.
+	refreshtokenDescIsActive := refreshtokenFields[5].Descriptor()
+	// refreshtoken.DefaultIsActive holds the default value on creation for the is_active field.
+	refreshtoken.DefaultIsActive = refreshtokenDescIsActive.Default.(bool)
 	// refreshtokenDescUserAgent is the schema descriptor for user_agent field.
-	refreshtokenDescUserAgent := refreshtokenFields[5].Descriptor()
+	refreshtokenDescUserAgent := refreshtokenFields[6].Descriptor()
 	// refreshtoken.UserAgentValidator is a validator for the "user_agent" field. It is called by the builders before save.
 	refreshtoken.UserAgentValidator = refreshtokenDescUserAgent.Validators[0].(func(string) error)
 	userFields := models.User{}.Fields()

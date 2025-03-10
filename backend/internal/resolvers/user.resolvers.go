@@ -181,6 +181,16 @@ func (r *mutationResolver) FinishAuthnLogin(ctx context.Context, response string
 	}, nil
 }
 
+// SignOut is the resolver for the signOut field.
+func (r *mutationResolver) SignOut(ctx context.Context) (bool, error) {
+	err := r.authenticationService.Logout(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // Viewer is the resolver for the viewer field.
 func (r *queryResolver) Viewer(ctx context.Context) (*model.Viewer, error) {
 	return auth.ViewerFromContext(ctx), nil

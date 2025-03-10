@@ -67,6 +67,20 @@ func (rtc *RefreshTokenCreate) SetIPAddress(s string) *RefreshTokenCreate {
 	return rtc
 }
 
+// SetIsActive sets the "is_active" field.
+func (rtc *RefreshTokenCreate) SetIsActive(b bool) *RefreshTokenCreate {
+	rtc.mutation.SetIsActive(b)
+	return rtc
+}
+
+// SetNillableIsActive sets the "is_active" field if the given value is not nil.
+func (rtc *RefreshTokenCreate) SetNillableIsActive(b *bool) *RefreshTokenCreate {
+	if b != nil {
+		rtc.SetIsActive(*b)
+	}
+	return rtc
+}
+
 // SetUserAgent sets the "user_agent" field.
 func (rtc *RefreshTokenCreate) SetUserAgent(s string) *RefreshTokenCreate {
 	rtc.mutation.SetUserAgent(s)
@@ -127,6 +141,10 @@ func (rtc *RefreshTokenCreate) defaults() {
 		v := refreshtoken.DefaultRefreshAt()
 		rtc.mutation.SetRefreshAt(v)
 	}
+	if _, ok := rtc.mutation.IsActive(); !ok {
+		v := refreshtoken.DefaultIsActive
+		rtc.mutation.SetIsActive(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -155,6 +173,9 @@ func (rtc *RefreshTokenCreate) check() error {
 		if err := refreshtoken.IPAddressValidator(v); err != nil {
 			return &ValidationError{Name: "ip_address", err: fmt.Errorf(`ent: validator failed for field "RefreshToken.ip_address": %w`, err)}
 		}
+	}
+	if _, ok := rtc.mutation.IsActive(); !ok {
+		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "RefreshToken.is_active"`)}
 	}
 	if _, ok := rtc.mutation.UserAgent(); !ok {
 		return &ValidationError{Name: "user_agent", err: errors.New(`ent: missing required field "RefreshToken.user_agent"`)}
@@ -212,6 +233,10 @@ func (rtc *RefreshTokenCreate) createSpec() (*RefreshToken, *sqlgraph.CreateSpec
 	if value, ok := rtc.mutation.IPAddress(); ok {
 		_spec.SetField(refreshtoken.FieldIPAddress, field.TypeString, value)
 		_node.IPAddress = value
+	}
+	if value, ok := rtc.mutation.IsActive(); ok {
+		_spec.SetField(refreshtoken.FieldIsActive, field.TypeBool, value)
+		_node.IsActive = value
 	}
 	if value, ok := rtc.mutation.UserAgent(); ok {
 		_spec.SetField(refreshtoken.FieldUserAgent, field.TypeString, value)

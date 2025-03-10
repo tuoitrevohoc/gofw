@@ -80,6 +80,11 @@ func IPAddress(v string) predicate.RefreshToken {
 	return predicate.RefreshToken(sql.FieldEQ(FieldIPAddress, v))
 }
 
+// IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
+func IsActive(v bool) predicate.RefreshToken {
+	return predicate.RefreshToken(sql.FieldEQ(FieldIsActive, v))
+}
+
 // UserAgent applies equality check predicate on the "user_agent" field. It's identical to UserAgentEQ.
 func UserAgent(v string) predicate.RefreshToken {
 	return predicate.RefreshToken(sql.FieldEQ(FieldUserAgent, v))
@@ -333,6 +338,16 @@ func IPAddressEqualFold(v string) predicate.RefreshToken {
 // IPAddressContainsFold applies the ContainsFold predicate on the "ip_address" field.
 func IPAddressContainsFold(v string) predicate.RefreshToken {
 	return predicate.RefreshToken(sql.FieldContainsFold(FieldIPAddress, v))
+}
+
+// IsActiveEQ applies the EQ predicate on the "is_active" field.
+func IsActiveEQ(v bool) predicate.RefreshToken {
+	return predicate.RefreshToken(sql.FieldEQ(FieldIsActive, v))
+}
+
+// IsActiveNEQ applies the NEQ predicate on the "is_active" field.
+func IsActiveNEQ(v bool) predicate.RefreshToken {
+	return predicate.RefreshToken(sql.FieldNEQ(FieldIsActive, v))
 }
 
 // UserAgentEQ applies the EQ predicate on the "user_agent" field.

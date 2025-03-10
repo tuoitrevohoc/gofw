@@ -22,6 +22,7 @@ func (RefreshToken) Fields() []ent.Field {
 		field.Time("refresh_at").Default(time.Now),
 		field.Time("expire_at"),
 		field.String("ip_address").NotEmpty(),
+		field.Bool("is_active").Default(true),
 		field.String("user_agent").NotEmpty(),
 	}
 }

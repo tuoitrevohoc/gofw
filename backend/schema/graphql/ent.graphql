@@ -83,6 +83,7 @@ type RefreshToken implements Node {
   refreshAt: Time!
   expireAt: Time!
   ipAddress: String!
+  isActive: Boolean!
   userAgent: String!
   user: User!
 }

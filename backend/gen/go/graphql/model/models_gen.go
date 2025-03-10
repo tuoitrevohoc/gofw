@@ -35,4 +35,5 @@ type Viewer struct {
 	Profile         *ent.User     `json:"profile"`
 	UserID          *scalars.GUID `json:"userId,omitempty"`
 	IsAuthenticated bool          `json:"isAuthenticated"`
+	SessionID       *int          `json:"sessionId,omitempty"`
 }

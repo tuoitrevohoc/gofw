@@ -9,6 +9,8 @@ import {
 import { Outlet, useLocation } from "react-router-dom";
 import NavigationBar from "../components/navigation/NavigationBar";
 import { Link } from "react-router";
+import TopBar from "./TopBar";
+import { useState } from "react";
 
 export interface MenuItem {
   icon: string;
@@ -85,6 +87,12 @@ function SideMenu({ menuItems }: DefaultLayoutProps) {
 }
 
 export default function DefaultLayout({ menuItems }: DefaultLayoutProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMenuOpen(!menuOpen);
+  };
+
   return (
     <Stack direction="row" height="100vh">
       <Drawer
@@ -94,8 +102,17 @@ export default function DefaultLayout({ menuItems }: DefaultLayoutProps) {
         sx={{
           width: drawerWidth,
           flexShrink: 0,
-          display: { xs: "none", sm: "block" },
+          display: { xs: "none", lg: "block" },
         }}
+      >
+        <NavigationBar />
+        <SideMenu menuItems={menuItems} />
+      </Drawer>
+      <Drawer
+        id="mobile-drawer"
+        variant="temporary"
+        open={menuOpen}
+        onClose={handleDrawerToggle}
       >
         <NavigationBar />
         <SideMenu menuItems={menuItems} />
@@ -104,9 +121,10 @@ export default function DefaultLayout({ menuItems }: DefaultLayoutProps) {
         flexGrow={1}
         display="flex"
         flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
+        justifyContent="flex-start"
+        alignItems="flex-start"
       >
+        <TopBar onMenuClick={handleDrawerToggle} />
         <Outlet />
       </Stack>
     </Stack>

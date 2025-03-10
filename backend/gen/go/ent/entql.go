@@ -48,6 +48,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			refreshtoken.FieldRefreshAt: {Type: field.TypeTime, Column: refreshtoken.FieldRefreshAt},
 			refreshtoken.FieldExpireAt:  {Type: field.TypeTime, Column: refreshtoken.FieldExpireAt},
 			refreshtoken.FieldIPAddress: {Type: field.TypeString, Column: refreshtoken.FieldIPAddress},
+			refreshtoken.FieldIsActive:  {Type: field.TypeBool, Column: refreshtoken.FieldIsActive},
 			refreshtoken.FieldUserAgent: {Type: field.TypeString, Column: refreshtoken.FieldUserAgent},
 		},
 	}
@@ -254,6 +255,11 @@ func (f *RefreshTokenFilter) WhereExpireAt(p entql.TimeP) {
 // WhereIPAddress applies the entql string predicate on the ip_address field.
 func (f *RefreshTokenFilter) WhereIPAddress(p entql.StringP) {
 	f.Where(p.Field(refreshtoken.FieldIPAddress))
+}
+
+// WhereIsActive applies the entql bool predicate on the is_active field.
+func (f *RefreshTokenFilter) WhereIsActive(p entql.BoolP) {
+	f.Where(p.Field(refreshtoken.FieldIsActive))
 }
 
 // WhereUserAgent applies the entql string predicate on the user_agent field.

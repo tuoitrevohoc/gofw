@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -59,7 +58,26 @@ func (s *AuthenticationService) RefreshTokenEndpoint(w http.ResponseWriter, r *h
 }
 
 func (s *AuthenticationService) Logout(ctx context.Context) error {
+	defer func() {
+		gofw.ContextStatsd(ctx).Incr("auth_logout", []string{}, 1)
+	}()
+
 	writer := gofw.ContextResponseWriter(ctx)
+	viewer := ViewerFromContext(ctx)
+
+	if viewer == nil {
+		return errors.New("viewer not found")
+	}
+
+	_, err := s.ent.RefreshToken.Update().
+		Where(refreshtoken.ID(*viewer.SessionID)).
+		SetIsActive(false).
+		Save(ctx)
+
+	if err != nil {
+		return err
+	}
+
 	http.SetCookie(*writer, &http.Cookie{
 		Name:     refreshTokenCookieName,
 		Value:    "",
@@ -88,6 +106,10 @@ func (s *AuthenticationService) setRefreshTokenCookie(ctx context.Context, refre
 }
 
 func (s *AuthenticationService) Login(ctx context.Context, user *ent.User) (*AccessToken, error) {
+	defer func() {
+		gofw.ContextStatsd(ctx).Incr("auth_login", []string{}, 1)
+	}()
+
 	// generate access token
 	request := gofw.ContextRequest(ctx)
 	ipAddress := request.RemoteAddr
@@ -114,6 +136,10 @@ func (s *AuthenticationService) Login(ctx context.Context, user *ent.User) (*Acc
 }
 
 func (s *AuthenticationService) RefreshToken(ctx context.Context) (*AccessToken, error) {
+	defer func() {
+		gofw.ContextStatsd(ctx).Incr("auth_refresh_token", []string{}, 1)
+	}()
+
 	request := gofw.ContextRequest(ctx)
 
 	tokenCookie, err := request.Cookie(refreshTokenCookieName)
@@ -123,7 +149,7 @@ func (s *AuthenticationService) RefreshToken(ctx context.Context) (*AccessToken,
 	}
 
 	refreshToken, err := s.ent.RefreshToken.Query().
-		Where(refreshtoken.Token(tokenCookie.Value)).
+		Where(refreshtoken.Token(tokenCookie.Value), refreshtoken.IsActive(true)).
 		Only(ctx)
 	if err != nil {
 		return nil, err
@@ -157,7 +183,7 @@ func (s *AuthenticationService) GenerateAccessToken(ctx context.Context, refresh
 		"sub":        scalars.NewGUID(user.Table, usr.ID).String(),
 		"exp":        expiry.Unix(),
 		"iat":        time.Now().Unix(),
-		"refresh_id": fmt.Sprintf("%d", refreshToken.ID),
+		"refresh_id": refreshToken.ID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -180,8 +206,16 @@ func (s *AuthenticationService) VerifyAccessToken(ctx context.Context, token str
 		return nil, err
 	}
 
+	refreshIDNumber, ok := claims["refresh_id"].(float64)
+	if !ok {
+		return nil, errors.New("refresh id not found")
+	}
+
+	refreshID := int(refreshIDNumber)
+
 	return &model.Viewer{
 		UserID:          scalars.ParseGUID(claims["sub"].(string)),
 		IsAuthenticated: true,
+		SessionID:       &refreshID,
 	}, nil
 }

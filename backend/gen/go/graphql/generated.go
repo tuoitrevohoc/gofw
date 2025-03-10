@@ -81,6 +81,7 @@ type ComplexityRoot struct {
 		FinishAuthnLogin        func(childComplexity int, response string) int
 		FinishAuthnRegistration func(childComplexity int, email string, response string) int
 		SignIn                  func(childComplexity int, input model.SignInInput) int
+		SignOut                 func(childComplexity int) int
 		SignUp                  func(childComplexity int, input model.SignUpInput) int
 	}
 
@@ -102,6 +103,7 @@ type ComplexityRoot struct {
 		ExpireAt  func(childComplexity int) int
 		ID        func(childComplexity int) int
 		IPAddress func(childComplexity int) int
+		IsActive  func(childComplexity int) int
 		RefreshAt func(childComplexity int) int
 		Token     func(childComplexity int) int
 		User      func(childComplexity int) int
@@ -123,6 +125,7 @@ type ComplexityRoot struct {
 	Viewer struct {
 		IsAuthenticated func(childComplexity int) int
 		Profile         func(childComplexity int) int
+		SessionID       func(childComplexity int) int
 		UserID          func(childComplexity int) int
 	}
 }
@@ -137,6 +140,7 @@ type MutationResolver interface {
 	FinishAuthnRegistration(ctx context.Context, email string, response string) (*model.AccessToken, error)
 	BeginAuthnLogin(ctx context.Context) (*model.AuthnLoginResponse, error)
 	FinishAuthnLogin(ctx context.Context, response string) (*model.AccessToken, error)
+	SignOut(ctx context.Context) (bool, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id scalars.GUID) (ent.Noder, error)
@@ -290,6 +294,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.SignIn(childComplexity, args["input"].(model.SignInInput)), true
 
+	case "Mutation.signOut":
+		if e.complexity.Mutation.SignOut == nil {
+			break
+		}
+
+		return e.complexity.Mutation.SignOut(childComplexity), true
+
 	case "Mutation.signUp":
 		if e.complexity.Mutation.SignUp == nil {
 			break
@@ -388,6 +399,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RefreshToken.IPAddress(childComplexity), true
+
+	case "RefreshToken.isActive":
+		if e.complexity.RefreshToken.IsActive == nil {
+			break
+		}
+
+		return e.complexity.RefreshToken.IsActive(childComplexity), true
 
 	case "RefreshToken.refreshAt":
 		if e.complexity.RefreshToken.RefreshAt == nil {
@@ -493,6 +511,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Viewer.Profile(childComplexity), true
+
+	case "Viewer.sessionId":
+		if e.complexity.Viewer.SessionID == nil {
+			break
+		}
+
+		return e.complexity.Viewer.SessionID(childComplexity), true
 
 	case "Viewer.userId":
 		if e.complexity.Viewer.UserID == nil {
@@ -693,6 +718,7 @@ type RefreshToken implements Node {
   refreshAt: Time!
   expireAt: Time!
   ipAddress: String!
+  isActive: Boolean!
   userAgent: String!
   user: User!
 }
@@ -716,6 +742,7 @@ type User implements Node {
   profile: User! @goField(forceResolver: true)
   userId: ID
   isAuthenticated: Boolean!
+  sessionId: Int
 }
 
 type AccessToken {
@@ -755,6 +782,8 @@ extend type Mutation {
 
   beginAuthnLogin: AuthnLoginResponse!
   finishAuthnLogin(response: String!): AccessToken!
+
+  signOut: Boolean!
 }
 `, BuiltIn: false},
 }
@@ -1264,6 +1293,8 @@ func (ec *executionContext) fieldContext_AccessToken_viewer(_ context.Context, f
 				return ec.fieldContext_Viewer_userId(ctx, field)
 			case "isAuthenticated":
 				return ec.fieldContext_Viewer_isAuthenticated(ctx, field)
+			case "sessionId":
+				return ec.fieldContext_Viewer_sessionId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Viewer", field.Name)
 		},
@@ -1914,6 +1945,50 @@ func (ec *executionContext) fieldContext_Mutation_finishAuthnLogin(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_signOut(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_signOut(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SignOut(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_signOut(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *entgql.PageInfo[int]) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PageInfo_hasNextPage(ctx, field)
 	if err != nil {
@@ -2236,6 +2311,8 @@ func (ec *executionContext) fieldContext_Query_viewer(_ context.Context, field g
 				return ec.fieldContext_Viewer_userId(ctx, field)
 			case "isAuthenticated":
 				return ec.fieldContext_Viewer_isAuthenticated(ctx, field)
+			case "sessionId":
+				return ec.fieldContext_Viewer_sessionId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Viewer", field.Name)
 		},
@@ -2633,6 +2710,50 @@ func (ec *executionContext) fieldContext_RefreshToken_ipAddress(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RefreshToken_isActive(ctx context.Context, field graphql.CollectedField, obj *ent.RefreshToken) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RefreshToken_isActive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsActive, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RefreshToken_isActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RefreshToken",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3141,6 +3262,8 @@ func (ec *executionContext) fieldContext_User_accessTokens(_ context.Context, fi
 				return ec.fieldContext_RefreshToken_expireAt(ctx, field)
 			case "ipAddress":
 				return ec.fieldContext_RefreshToken_ipAddress(ctx, field)
+			case "isActive":
+				return ec.fieldContext_RefreshToken_isActive(ctx, field)
 			case "userAgent":
 				return ec.fieldContext_RefreshToken_userAgent(ctx, field)
 			case "user":
@@ -3296,6 +3419,47 @@ func (ec *executionContext) fieldContext_Viewer_isAuthenticated(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Viewer_sessionId(ctx context.Context, field graphql.CollectedField, obj *model.Viewer) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Viewer_sessionId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SessionID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Viewer_sessionId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Viewer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5656,6 +5820,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "signOut":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_signOut(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5909,6 +6080,11 @@ func (ec *executionContext) _RefreshToken(ctx context.Context, sel ast.Selection
 			}
 		case "ipAddress":
 			out.Values[i] = ec._RefreshToken_ipAddress(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "isActive":
+			out.Values[i] = ec._RefreshToken_isActive(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -6184,6 +6360,8 @@ func (ec *executionContext) _Viewer(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "sessionId":
+			out.Values[i] = ec._Viewer_sessionId(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7154,6 +7332,22 @@ func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋb
 		return graphql.Null
 	}
 	return graphql.WrapContextMarshaler(ctx, v)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v any) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
 }
 
 func (ec *executionContext) marshalONode2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐNoder(ctx context.Context, sel ast.SelectionSet, v ent.Noder) graphql.Marshaler {

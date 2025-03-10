@@ -2,6 +2,7 @@ type Viewer {
   profile: User! @goField(forceResolver: true)
   userId: ID
   isAuthenticated: Boolean!
+  sessionId: Int
 }
 
 type AccessToken {
@@ -41,4 +42,6 @@ extend type Mutation {
 
   beginAuthnLogin: AuthnLoginResponse!
   finishAuthnLogin(response: String!): AccessToken!
+
+  signOut: Boolean!
 }

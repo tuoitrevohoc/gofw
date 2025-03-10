@@ -38,6 +38,7 @@ var (
 		{Name: "refresh_at", Type: field.TypeTime},
 		{Name: "expire_at", Type: field.TypeTime},
 		{Name: "ip_address", Type: field.TypeString},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "user_agent", Type: field.TypeString},
 		{Name: "user_access_tokens", Type: field.TypeInt},
 	}
@@ -49,7 +50,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "refresh_tokens_users_access_tokens",
-				Columns:    []*schema.Column{RefreshTokensColumns[7]},
+				Columns:    []*schema.Column{RefreshTokensColumns[8]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

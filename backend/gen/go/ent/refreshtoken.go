@@ -28,6 +28,8 @@ type RefreshToken struct {
 	ExpireAt time.Time `json:"expire_at,omitempty"`
 	// IPAddress holds the value of the "ip_address" field.
 	IPAddress string `json:"ip_address,omitempty"`
+	// IsActive holds the value of the "is_active" field.
+	IsActive bool `json:"is_active,omitempty"`
 	// UserAgent holds the value of the "user_agent" field.
 	UserAgent string `json:"user_agent,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -64,6 +66,8 @@ func (*RefreshToken) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case refreshtoken.FieldIsActive:
+			values[i] = new(sql.NullBool)
 		case refreshtoken.FieldID:
 			values[i] = new(sql.NullInt64)
 		case refreshtoken.FieldToken, refreshtoken.FieldIPAddress, refreshtoken.FieldUserAgent:
@@ -122,6 +126,12 @@ func (rt *RefreshToken) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field ip_address", values[i])
 			} else if value.Valid {
 				rt.IPAddress = value.String
+			}
+		case refreshtoken.FieldIsActive:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_active", values[i])
+			} else if value.Valid {
+				rt.IsActive = value.Bool
 			}
 		case refreshtoken.FieldUserAgent:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -191,6 +201,9 @@ func (rt *RefreshToken) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("ip_address=")
 	builder.WriteString(rt.IPAddress)
+	builder.WriteString(", ")
+	builder.WriteString("is_active=")
+	builder.WriteString(fmt.Sprintf("%v", rt.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("user_agent=")
 	builder.WriteString(rt.UserAgent)

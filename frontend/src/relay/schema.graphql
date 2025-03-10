@@ -59,6 +59,7 @@ type Mutation {
   finishAuthnRegistration(email: String!, response: String!): AccessToken!
   beginAuthnLogin: AuthnLoginResponse!
   finishAuthnLogin(response: String!): AccessToken!
+  signOut: Boolean!
 }
 
 """
@@ -121,6 +122,7 @@ type RefreshToken implements Node {
   refreshAt: Time!
   expireAt: Time!
   ipAddress: String!
+  isActive: Boolean!
   userAgent: String!
   user: User!
 }
@@ -154,5 +156,6 @@ type Viewer {
   profile: User!
   userId: ID
   isAuthenticated: Boolean!
+  sessionId: Int
 }
 
