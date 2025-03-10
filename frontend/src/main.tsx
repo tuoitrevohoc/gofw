@@ -8,6 +8,8 @@ import { baseVars } from "./theme/base-vars.ts";
 import { RelayEnvironmentProvider } from "react-relay";
 import environment from "./relay/environment.ts";
 
+import "./global.css";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RelayEnvironmentProvider environment={environment}>

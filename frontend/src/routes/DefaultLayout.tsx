@@ -36,7 +36,7 @@ function SideMenuItem({
       key={item.path}
       sx={{
         pl: 2,
-        py: 1,
+        py: 0.5,
         pr: 1.5,
         borderRadius: 0.75,
         typography: "body2",
@@ -48,7 +48,7 @@ function SideMenuItem({
     >
       <ListItemButton
         sx={{
-          gap: 2,
+          gap: 1,
           borderRadius: 0.75,
           ...(isActive && {
             fontWeight: "fontWeightSemiBold",
@@ -74,7 +74,7 @@ function SideMenu({ menuItems }: DefaultLayoutProps) {
   const currentPath = location.pathname;
 
   return (
-    <List>
+    <List sx={{ gap: 0 }}>
       {menuItems.map((item) => (
         <SideMenuItem
           key={item.path}
