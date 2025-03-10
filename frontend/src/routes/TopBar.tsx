@@ -1,7 +1,5 @@
-import { AppBar, Box, IconButton, Stack, Typography } from "@mui/material";
+import { AppBar, Box, IconButton, Stack } from "@mui/material";
 import StackBar from "../components/icons/StackBar";
-import { Link } from "react-router-dom";
-import { AccountCircle } from "@mui/icons-material";
 import AccountMenu from "./auth/AccountMenu";
 
 interface TopBarProps {
