@@ -10,7 +10,10 @@ export default function AuthLayout() {
       display="flex"
       flexDirection="column"
       sx={{
-        backgroundImage: `url(${Overlay})`,
+        backgroundImage: {
+          sm: `url(${Overlay})`,
+          xs: "none",
+        },
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -21,23 +24,33 @@ export default function AuthLayout() {
         display="flex"
         justifyContent={{
           xs: "flex-start",
-          md: "center",
+          sm: "center",
         }}
         alignItems="center"
       >
         <Box
           sx={{
-            minWidth: 420,
+            minWidth: {
+              xs: "100%",
+              sm: "420px",
+            },
+            height: {
+              xs: "100%",
+              sm: "auto",
+            },
             marginX: "auto",
             marginY: {
               xs: 5,
-              md: 0,
+              sm: 0,
             },
             backgroundColor: "var(--palette-background-default);",
-            borderRadius: 2,
+            borderRadius: {
+              xs: 0,
+              sm: 2,
+            },
             p: {
               xs: 2,
-              md: 5,
+              sm: 5,
             },
           }}
         >

@@ -86,7 +86,7 @@ function SideMenu({ menuItems }: DefaultLayoutProps) {
 
 export default function DefaultLayout({ menuItems }: DefaultLayoutProps) {
   return (
-    <Stack>
+    <Stack direction="row" height="100vh">
       <Drawer
         id="desktop-drawer"
         variant="permanent"
@@ -94,13 +94,21 @@ export default function DefaultLayout({ menuItems }: DefaultLayoutProps) {
         sx={{
           width: drawerWidth,
           flexShrink: 0,
-          display: { xs: "none", md: "block" },
+          display: { xs: "none", sm: "block" },
         }}
       >
         <NavigationBar />
         <SideMenu menuItems={menuItems} />
       </Drawer>
-      <Outlet />
+      <Stack
+        flexGrow={1}
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Outlet />
+      </Stack>
     </Stack>
   );
 }
