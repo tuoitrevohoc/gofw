@@ -7,6 +7,10 @@
         rewrite * /graphql{uri}
         reverse_proxy backend:8000
     }
+    handle_path /api/* {
+        rewrite * /api{uri}
+        reverse_proxy backend:8000
+    }
     handle_path /* {
         root * /srv
         file_server

@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/redis/go-redis/v9"
 	"github.com/tuoitrevohoc/gofw/backend/internal/auth"
 	"github.com/tuoitrevohoc/gofw/backend/internal/config"
@@ -49,7 +48,7 @@ func main() {
 	server.Use(authenticationService.AuthMiddleware)
 
 	server.AddHandler("/graphql", graphqlHandler)
-	server.AddHandler("/graphql/playground", playground.Handler("GraphQL playground", "/graphql"))
+	server.AddHandler("/graphql/playground", config.GraphiQLHandler())
 	server.AddHandler(auth.RefreshTokenPath, http.HandlerFunc(authenticationService.RefreshTokenEndpoint))
 
 	manager.AddService(server)
