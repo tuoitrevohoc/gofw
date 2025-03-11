@@ -1,6 +1,5 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Typography, Button, Box, Stack } from "@mui/material";
+import { Typography, Button, Stack } from "@mui/material";
 import NavigationBar from "../../components/navigation/NavigationBar";
 
 function ErrorPage() {
