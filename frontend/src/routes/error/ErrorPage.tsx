@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Typography, Button, Stack } from "@mui/material";
+import { Typography, Button, Stack, Box } from "@mui/material";
 import NavigationBar from "../../components/navigation/NavigationBar";
+
+import SadPanda from "./SadPanda@2x.png";
 
 function ErrorPage() {
   const navigate = useNavigate();
@@ -20,10 +22,9 @@ function ErrorPage() {
           alignItems="center"
           gap={3}
         >
-          <Typography variant="h2">Error</Typography>
-          <Typography variant="body1">
-            Something went wrong. Please try again later.
-          </Typography>
+          <Box>
+            <img src={SadPanda} alt="Sad Panda" style={{ width: 256 }} />
+          </Box>
           <Typography variant="body2">
             Please check the server if it's running.
           </Typography>
