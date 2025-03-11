@@ -210,7 +210,7 @@ func (a *Authenticator) FinishLogin(ctx context.Context, response *protocol.Pars
 	timedCacheKey := fmt.Sprintf(sessionCacheKey, response.Response.CollectedClientData.Challenge)
 	var authnSession webauthn.SessionData
 
-	userHandler, err := base64.StdEncoding.DecodeString(string(response.Response.UserHandle))
+	userHandler, err := base64.RawStdEncoding.DecodeString(string(response.Response.UserHandle))
 	if err != nil {
 		logger.Error("error decoding user handle", zap.Error(err))
 		userHandler = response.Response.UserHandle

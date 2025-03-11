@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"strings"
 
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
@@ -37,8 +36,7 @@ func NewWebAuthnUserFromUser(ctx context.Context, user *ent.User) (*WebAuthnUser
 		webCreds[i] = *webCred
 	}
 
-	encodedEmail := base64.StdEncoding.EncodeToString([]byte(user.Email))
-	encodedEmail = strings.TrimRight(encodedEmail, "=")
+	encodedEmail := base64.RawStdEncoding.EncodeToString([]byte(user.Email))
 
 	return &WebAuthnUser{
 		email: encodedEmail,
@@ -63,15 +61,14 @@ func (u *WebAuthnUser) WebAuthnCredentials() []webauthn.Credential {
 }
 
 func encodeSession(session *webauthn.SessionData) *webauthn.SessionData {
-	challenge := base64.StdEncoding.EncodeToString([]byte(session.Challenge))
-	challenge = strings.TrimRight(challenge, "=")
+	challenge := base64.RawStdEncoding.EncodeToString([]byte(session.Challenge))
 	session.Challenge = challenge
 	return session
 }
 
 func convertToCredential(webauthnCredential *webauthn.Credential) (*ent.Credential, error) {
 	// convert public key to base64
-	publicKey := base64.StdEncoding.EncodeToString(webauthnCredential.PublicKey)
+	publicKey := base64.RawStdEncoding.EncodeToString(webauthnCredential.PublicKey)
 
 	// convert data to base64
 	data, err := json.Marshal(webauthnCredential)

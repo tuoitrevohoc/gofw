@@ -23,7 +23,7 @@ func NewGUID(nodeType string, id int) *GUID {
 
 func ParseGUID(guid string) *GUID {
 	// decode base64 string
-	decoded, err := base64.StdEncoding.DecodeString(guid)
+	decoded, err := base64.RawStdEncoding.DecodeString(guid)
 	if err != nil {
 		return nil
 	}
@@ -42,7 +42,7 @@ func ParseGUID(guid string) *GUID {
 }
 
 func (g *GUID) String() string {
-	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s/%d", g.nodeType, g.id)))
+	return base64.RawStdEncoding.EncodeToString([]byte(fmt.Sprintf("%s/%d", g.nodeType, g.id)))
 }
 
 func (g *GUID) UnmarshalGQLContext(ctx context.Context, v interface{}) error {
