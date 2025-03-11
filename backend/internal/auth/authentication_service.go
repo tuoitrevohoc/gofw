@@ -20,7 +20,7 @@ import (
 const (
 	refreshTokenCookieName   = "refresh_token"
 	refreshTokenCookieMaxAge = 3600 * 24 * 30 * time.Second // 30 days
-	accessTokenMaxAge        = 1 * 60 * time.Second         // 1 minute
+	accessTokenMaxAge        = 15 * 60 * time.Second        // 15 minutes
 	RefreshTokenPath         = "/api/refresh-token"
 )
 
