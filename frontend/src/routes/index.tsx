@@ -10,6 +10,7 @@ import RegisterPage from "./auth/RegisterPage";
 import { graphql, useLazyLoadQuery } from "react-relay";
 import { routesQuery } from "./__generated__/routesQuery.graphql";
 import LoginPage from "./auth/LoginPage";
+import ErrorPage from "./error/ErrorPage";
 
 const SidebarMenu: MenuItem[] = [
   { icon: Analytics, label: "Home", path: "/" },
@@ -35,9 +36,14 @@ export default function AppRoutes() {
     return (
       <Routes>
         <Route path="/" element={<DefaultLayout menuItems={SidebarMenu} />}>
-          <Route path="/*" element={<Home />} />
           <Route path="/" element={<Home />} />
         </Route>
+        <Route
+          path="/*"
+          element={
+            <ErrorPage message="I could not find the page you are looking for. Forgot to plug in the router?" />
+          }
+        />
       </Routes>
     );
   }

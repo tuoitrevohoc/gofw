@@ -4,7 +4,14 @@ import NavigationBar from "../../components/navigation/NavigationBar";
 
 import SadPanda from "./SadPanda@2x.png";
 
-function ErrorPage() {
+const ErrorMessage = "Something went wrong. Please try again later.";
+interface Props {
+  message?: string;
+}
+
+function ErrorPage(
+  { message = ErrorMessage }: Props = { message: ErrorMessage }
+) {
   const navigate = useNavigate();
 
   const handleRedirect = () => {
@@ -25,9 +32,7 @@ function ErrorPage() {
           <Box>
             <img src={SadPanda} alt="Sad Panda" style={{ width: 256 }} />
           </Box>
-          <Typography variant="body2">
-            Please check the server if it's running.
-          </Typography>
+          <Typography variant="body2">{message}</Typography>
           <Button
             size="large"
             variant="contained"
