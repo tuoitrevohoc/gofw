@@ -1,6 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { lazy } from "react";
 import Home from "./Home";
 import DefaultLayout, { MenuItem } from "./DefaultLayout";
+import { routesQuery } from "./__generated__/routesQuery.graphql";
+
 import Analytics from "../assets/icons/navbar/ic-analytics.svg";
 import User from "../assets/icons/navbar/ic-user.svg";
 import Product from "../assets/icons/navbar/ic-cart.svg";
@@ -8,14 +11,15 @@ import Blog from "../assets/icons/navbar/ic-blog.svg";
 import AuthLayout from "./auth/AuthLayout";
 import RegisterPage from "./auth/RegisterPage";
 import { graphql, useLazyLoadQuery } from "react-relay";
-import { routesQuery } from "./__generated__/routesQuery.graphql";
-import LoginPage from "./auth/LoginPage";
-import ErrorPage from "./error/ErrorPage";
+
+const LoginPage = lazy(() => import("./auth/LoginPage"));
+const ErrorPage = lazy(() => import("./error/ErrorPage"));
+const RestaurantList = lazy(() => import("./restaurants/RestaurantList"));
 
 const SidebarMenu: MenuItem[] = [
   { icon: Analytics, label: "Home", path: "/" },
   { icon: User, label: "Users", path: "/users" },
-  { icon: Product, label: "Products", path: "/products" },
+  { icon: Product, label: "Restaurants", path: "/restaurants" },
   { icon: Blog, label: "Blogs", path: "/blogs" },
 ];
 
@@ -37,6 +41,7 @@ export default function AppRoutes() {
       <Routes>
         <Route path="/" element={<DefaultLayout menuItems={SidebarMenu} />}>
           <Route path="/" element={<Home />} />
+          <Route path="/restaurants" element={<RestaurantList />} />
         </Route>
         <Route
           path="/*"

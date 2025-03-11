@@ -126,7 +126,12 @@ export default function DefaultLayout({ menuItems }: DefaultLayoutProps) {
         alignItems="flex-start"
       >
         <TopBar onMenuClick={handleDrawerToggle} />
-        <Box flexGrow={1} width="100%" padding={2}>
+        <Box
+          flexGrow={1}
+          width="100%"
+          paddingX={4}
+          sx={{ maxWidth: 1000, marginX: "auto" }}
+        >
           <Outlet />
         </Box>
       </Stack>
