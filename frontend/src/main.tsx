@@ -9,6 +9,7 @@ import { RelayEnvironmentProvider } from "react-relay";
 import environment from "./relay/environment.ts";
 
 import "./global.css";
+import ErrorBoundary from "./components/ErrorBoundary.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -16,9 +17,11 @@ createRoot(document.getElementById("root")!).render(
       <ThemeProvider>
         <GlobalStyle styles={(theme) => ({ body: baseVars(theme) })} />
         <BrowserRouter>
-          <Suspense fallback={<div>Loading...</div>}>
-            <AppRoutes />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<div>Loading...</div>}>
+              <AppRoutes />
+            </Suspense>
+          </ErrorBoundary>
         </BrowserRouter>
       </ThemeProvider>
     </RelayEnvironmentProvider>

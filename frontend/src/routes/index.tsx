@@ -36,6 +36,7 @@ export default function AppRoutes() {
       <Routes>
         <Route path="/" element={<DefaultLayout menuItems={SidebarMenu} />}>
           <Route path="/*" element={<Home />} />
+          <Route path="/" element={<Home />} />
         </Route>
       </Routes>
     );

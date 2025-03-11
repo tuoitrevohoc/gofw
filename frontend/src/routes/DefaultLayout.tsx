@@ -5,6 +5,7 @@ import {
   ListItemText,
   Stack,
   Drawer,
+  Box,
 } from "@mui/material";
 import { Outlet, useLocation } from "react-router-dom";
 import NavigationBar from "../components/navigation/NavigationBar";
@@ -125,7 +126,9 @@ export default function DefaultLayout({ menuItems }: DefaultLayoutProps) {
         alignItems="flex-start"
       >
         <TopBar onMenuClick={handleDrawerToggle} />
-        <Outlet />
+        <Box flexGrow={1} width="100%" padding={2}>
+          <Outlet />
+        </Box>
       </Stack>
     </Stack>
   );

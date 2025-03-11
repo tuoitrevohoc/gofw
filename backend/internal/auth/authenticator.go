@@ -205,7 +205,7 @@ func (a *Authenticator) BeginLogin(ctx context.Context) (*protocol.CredentialAss
 
 func (a *Authenticator) FinishLogin(ctx context.Context, response *protocol.ParsedCredentialAssertionData) (*ent.User, error) {
 	logger := gofw.ContextLogger(ctx)
-	logger.Info("FinishLogin")
+	logger.Info("FinishLogin", zap.String("userHandler", string(response.Response.UserHandle)))
 
 	timedCacheKey := fmt.Sprintf(sessionCacheKey, response.Response.CollectedClientData.Challenge)
 	var authnSession webauthn.SessionData
@@ -213,7 +213,7 @@ func (a *Authenticator) FinishLogin(ctx context.Context, response *protocol.Pars
 	userHandler, err := base64.StdEncoding.DecodeString(string(response.Response.UserHandle))
 	if err != nil {
 		logger.Error("error decoding user handle", zap.Error(err))
-		return nil, err
+		userHandler = response.Response.UserHandle
 	}
 
 	err = a.timedCache.Get(ctx, timedCacheKey, &authnSession)
