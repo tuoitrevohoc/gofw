@@ -28,6 +28,10 @@ const GraphiQL = `
     <script crossorigin src="https://cdn.jsdelivr.net/npm/graphiql@3.7.0/graphiql.min.js"></script>
 
     <script>
+	function saveToken(viewer) {
+		sessionStorage.setItem("accessToken", viewer.accessToken);
+		sessionStorage.setItem("expiresAt", viewer.expiry.toString());
+	}
 	async function refreshToken() {
 		const response = await fetch("/api/refresh-token", {
 			method: "POST",
