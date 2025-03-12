@@ -1,4 +1,5 @@
 import { AppBar, Box, Stack } from "@mui/material";
+import { Link } from "react-router-dom";
 
 import Icon from "../icons/Icon";
 
@@ -18,9 +19,11 @@ export default function NavigationBar() {
       elevation={0}
     >
       <Stack direction="row" spacing={2}>
-        <Box sx={{ width: 40, height: 40 }}>
-          <Icon />
-        </Box>
+        <Link to="/">
+          <Box sx={{ width: 40, height: 40 }}>
+            <Icon />
+          </Box>
+        </Link>
       </Stack>
     </AppBar>
   );

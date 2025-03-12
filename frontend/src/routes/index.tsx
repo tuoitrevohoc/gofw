@@ -18,9 +18,9 @@ const RestaurantList = lazy(() => import("./restaurants/RestaurantList"));
 
 const SidebarMenu: MenuItem[] = [
   { icon: Analytics, label: "Home", path: "/" },
-  { icon: User, label: "Users", path: "/users" },
   { icon: Product, label: "Restaurants", path: "/restaurants" },
-  { icon: Blog, label: "Blogs", path: "/blogs" },
+  { icon: Blog, label: "Menu", path: "/menu" },
+  { icon: User, label: "Customers", path: "/customers" },
 ];
 
 export default function AppRoutes() {

@@ -10,6 +10,9 @@
 
 ### Method 1: Open in Dev Container
 
+Step 0. Install docker https://docs.docker.com/desktop/setup/install/mac-install/
+Install DevContainer Extension in VSCode https://marketplace.cursorapi.com/items?itemName=ms-vscode-remote.remote-containers
+
 1. Clone the repository:
 
    ```bash

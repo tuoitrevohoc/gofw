@@ -12,7 +12,11 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
       position="sticky"
       sx={{
         width: "100%",
-        backgroundColor: "transparent",
+        backdropFilter: "blur(10px)",
+        backgroundColor: {
+          xs: "var(--palette-background-paper)",
+          sm: "transparent",
+        },
         boxShadow: "none",
         padding: 2,
         borderBottom: {

@@ -130,6 +130,7 @@ export default function DefaultLayout({ menuItems }: DefaultLayoutProps) {
           flexGrow={1}
           width="100%"
           paddingX={4}
+          paddingY={2}
           sx={{ maxWidth: 1000, marginX: "auto" }}
         >
           <Outlet />
