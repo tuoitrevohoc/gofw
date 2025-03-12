@@ -6,14 +6,17 @@ package resolvers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"entgo.io/contrib/entgql"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/restaurant"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	graphql1 "github.com/tuoitrevohoc/gofw/backend/gen/go/graphql"
+	"github.com/tuoitrevohoc/gofw/backend/internal/auth"
 	"github.com/tuoitrevohoc/gofw/backend/internal/scalars"
 )
 
@@ -30,6 +33,19 @@ func (r *queryResolver) Node(ctx context.Context, id scalars.GUID) (ent.Noder, e
 // Nodes is the resolver for the nodes field.
 func (r *queryResolver) Nodes(ctx context.Context, ids []*scalars.GUID) ([]ent.Noder, error) {
 	panic(fmt.Errorf("not implemented: Nodes - nodes"))
+}
+
+// Restaurants is the resolver for the restaurants field.
+func (r *queryResolver) Restaurants(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int) (*ent.RestaurantConnection, error) {
+	viewer := auth.ViewerFromContext(ctx)
+
+	if viewer == nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	return r.client.Restaurant.Query().
+		Where(restaurant.HasOwnerWith(user.ID(viewer.UserID.Id()))).
+		Paginate(ctx, after, first, before, last)
 }
 
 // ID is the resolver for the id field.
@@ -67,3 +83,124 @@ type queryResolver struct{ *Resolver }
 type refreshTokenResolver struct{ *Resolver }
 type restaurantResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *credentialWhereInputResolver) ID(ctx context.Context, obj *ent.CredentialWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+func (r *credentialWhereInputResolver) IDNeq(ctx context.Context, obj *ent.CredentialWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDNeq - idNEQ"))
+}
+func (r *credentialWhereInputResolver) IDIn(ctx context.Context, obj *ent.CredentialWhereInput, data []*scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDIn - idIn"))
+}
+func (r *credentialWhereInputResolver) IDNotIn(ctx context.Context, obj *ent.CredentialWhereInput, data []*scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDNotIn - idNotIn"))
+}
+func (r *credentialWhereInputResolver) IDGt(ctx context.Context, obj *ent.CredentialWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDGt - idGT"))
+}
+func (r *credentialWhereInputResolver) IDGte(ctx context.Context, obj *ent.CredentialWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDGte - idGTE"))
+}
+func (r *credentialWhereInputResolver) IDLt(ctx context.Context, obj *ent.CredentialWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDLt - idLT"))
+}
+func (r *credentialWhereInputResolver) IDLte(ctx context.Context, obj *ent.CredentialWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDLte - idLTE"))
+}
+func (r *refreshTokenWhereInputResolver) ID(ctx context.Context, obj *ent.RefreshTokenWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+func (r *refreshTokenWhereInputResolver) IDNeq(ctx context.Context, obj *ent.RefreshTokenWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDNeq - idNEQ"))
+}
+func (r *refreshTokenWhereInputResolver) IDIn(ctx context.Context, obj *ent.RefreshTokenWhereInput, data []*scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDIn - idIn"))
+}
+func (r *refreshTokenWhereInputResolver) IDNotIn(ctx context.Context, obj *ent.RefreshTokenWhereInput, data []*scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDNotIn - idNotIn"))
+}
+func (r *refreshTokenWhereInputResolver) IDGt(ctx context.Context, obj *ent.RefreshTokenWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDGt - idGT"))
+}
+func (r *refreshTokenWhereInputResolver) IDGte(ctx context.Context, obj *ent.RefreshTokenWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDGte - idGTE"))
+}
+func (r *refreshTokenWhereInputResolver) IDLt(ctx context.Context, obj *ent.RefreshTokenWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDLt - idLT"))
+}
+func (r *refreshTokenWhereInputResolver) IDLte(ctx context.Context, obj *ent.RefreshTokenWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDLte - idLTE"))
+}
+func (r *restaurantWhereInputResolver) ID(ctx context.Context, obj *ent.RestaurantWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+func (r *restaurantWhereInputResolver) IDNeq(ctx context.Context, obj *ent.RestaurantWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDNeq - idNEQ"))
+}
+func (r *restaurantWhereInputResolver) IDIn(ctx context.Context, obj *ent.RestaurantWhereInput, data []*scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDIn - idIn"))
+}
+func (r *restaurantWhereInputResolver) IDNotIn(ctx context.Context, obj *ent.RestaurantWhereInput, data []*scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDNotIn - idNotIn"))
+}
+func (r *restaurantWhereInputResolver) IDGt(ctx context.Context, obj *ent.RestaurantWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDGt - idGT"))
+}
+func (r *restaurantWhereInputResolver) IDGte(ctx context.Context, obj *ent.RestaurantWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDGte - idGTE"))
+}
+func (r *restaurantWhereInputResolver) IDLt(ctx context.Context, obj *ent.RestaurantWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDLt - idLT"))
+}
+func (r *restaurantWhereInputResolver) IDLte(ctx context.Context, obj *ent.RestaurantWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDLte - idLTE"))
+}
+func (r *userWhereInputResolver) ID(ctx context.Context, obj *ent.UserWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: ID - id"))
+}
+func (r *userWhereInputResolver) IDNeq(ctx context.Context, obj *ent.UserWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDNeq - idNEQ"))
+}
+func (r *userWhereInputResolver) IDIn(ctx context.Context, obj *ent.UserWhereInput, data []*scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDIn - idIn"))
+}
+func (r *userWhereInputResolver) IDNotIn(ctx context.Context, obj *ent.UserWhereInput, data []*scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDNotIn - idNotIn"))
+}
+func (r *userWhereInputResolver) IDGt(ctx context.Context, obj *ent.UserWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDGt - idGT"))
+}
+func (r *userWhereInputResolver) IDGte(ctx context.Context, obj *ent.UserWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDGte - idGTE"))
+}
+func (r *userWhereInputResolver) IDLt(ctx context.Context, obj *ent.UserWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDLt - idLT"))
+}
+func (r *userWhereInputResolver) IDLte(ctx context.Context, obj *ent.UserWhereInput, data *scalars.GUID) error {
+	panic(fmt.Errorf("not implemented: IDLte - idLTE"))
+}
+func (r *Resolver) CredentialWhereInput() graphql1.CredentialWhereInputResolver {
+	return &credentialWhereInputResolver{r}
+}
+func (r *Resolver) RefreshTokenWhereInput() graphql1.RefreshTokenWhereInputResolver {
+	return &refreshTokenWhereInputResolver{r}
+}
+func (r *Resolver) RestaurantWhereInput() graphql1.RestaurantWhereInputResolver {
+	return &restaurantWhereInputResolver{r}
+}
+func (r *Resolver) UserWhereInput() graphql1.UserWhereInputResolver {
+	return &userWhereInputResolver{r}
+}
+type credentialWhereInputResolver struct{ *Resolver }
+type refreshTokenWhereInputResolver struct{ *Resolver }
+type restaurantWhereInputResolver struct{ *Resolver }
+type userWhereInputResolver struct{ *Resolver }
+*/

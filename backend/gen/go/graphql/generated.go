@@ -95,9 +95,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Node   func(childComplexity int, id scalars.GUID) int
-		Nodes  func(childComplexity int, ids []*scalars.GUID) int
-		Viewer func(childComplexity int) int
+		Node        func(childComplexity int, id scalars.GUID) int
+		Nodes       func(childComplexity int, ids []*scalars.GUID) int
+		Restaurants func(childComplexity int, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int) int
+		Viewer      func(childComplexity int) int
 	}
 
 	RefreshToken struct {
@@ -117,6 +118,17 @@ type ComplexityRoot struct {
 		ID      func(childComplexity int) int
 		Name    func(childComplexity int) int
 		Owner   func(childComplexity int) int
+	}
+
+	RestaurantConnection struct {
+		Edges      func(childComplexity int) int
+		PageInfo   func(childComplexity int) int
+		TotalCount func(childComplexity int) int
+	}
+
+	RestaurantEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
 	}
 
 	User struct {
@@ -156,6 +168,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Node(ctx context.Context, id scalars.GUID) (ent.Noder, error)
 	Nodes(ctx context.Context, ids []*scalars.GUID) ([]ent.Noder, error)
+	Restaurants(ctx context.Context, after *entgql.Cursor[int], first *int, before *entgql.Cursor[int], last *int) (*ent.RestaurantConnection, error)
 	Viewer(ctx context.Context) (*model.Viewer, error)
 }
 type RefreshTokenResolver interface {
@@ -391,6 +404,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Nodes(childComplexity, args["ids"].([]*scalars.GUID)), true
 
+	case "Query.restaurants":
+		if e.complexity.Query.Restaurants == nil {
+			break
+		}
+
+		args, err := ec.field_Query_restaurants_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Restaurants(childComplexity, args["after"].(*entgql.Cursor[int]), args["first"].(*int), args["before"].(*entgql.Cursor[int]), args["last"].(*int)), true
+
 	case "Query.viewer":
 		if e.complexity.Query.Viewer == nil {
 			break
@@ -488,6 +513,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Restaurant.Owner(childComplexity), true
+
+	case "RestaurantConnection.edges":
+		if e.complexity.RestaurantConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.RestaurantConnection.Edges(childComplexity), true
+
+	case "RestaurantConnection.pageInfo":
+		if e.complexity.RestaurantConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.RestaurantConnection.PageInfo(childComplexity), true
+
+	case "RestaurantConnection.totalCount":
+		if e.complexity.RestaurantConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.RestaurantConnection.TotalCount(childComplexity), true
+
+	case "RestaurantEdge.cursor":
+		if e.complexity.RestaurantEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.RestaurantEdge.Cursor(childComplexity), true
+
+	case "RestaurantEdge.node":
+		if e.complexity.RestaurantEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.RestaurantEdge.Node(childComplexity), true
 
 	case "User.accessTokens":
 		if e.complexity.User.AccessTokens == nil {
@@ -772,6 +832,27 @@ type Query {
     """
     ids: [ID!]!
   ): [Node]!
+  restaurants(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: Cursor
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: Cursor
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+  ): RestaurantConnection!
 }
 type RefreshToken implements Node {
   id: ID!
@@ -789,6 +870,36 @@ type Restaurant implements Node {
   name: String!
   address: String!
   owner: User!
+}
+"""
+A connection to a list of items.
+"""
+type RestaurantConnection {
+  """
+  A list of edges.
+  """
+  edges: [RestaurantEdge]
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  Identifies the total count of items in the connection.
+  """
+  totalCount: Int!
+}
+"""
+An edge in a connection.
+"""
+type RestaurantEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: Restaurant
+  """
+  A cursor for use in pagination.
+  """
+  cursor: Cursor!
 }
 """
 The builtin Time type
@@ -1144,6 +1255,103 @@ func (ec *executionContext) field_Query_nodes_argsIds(
 	}
 
 	var zeroVal []*scalars.GUID
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_restaurants_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_restaurants_argsAfter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg0
+	arg1, err := ec.field_Query_restaurants_argsFirst(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := ec.field_Query_restaurants_argsBefore(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg2
+	arg3, err := ec.field_Query_restaurants_argsLast(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	return args, nil
+}
+func (ec *executionContext) field_Query_restaurants_argsAfter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*entgql.Cursor[int], error) {
+	if _, ok := rawArgs["after"]; !ok {
+		var zeroVal *entgql.Cursor[int]
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+	if tmp, ok := rawArgs["after"]; ok {
+		return ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor(ctx, tmp)
+	}
+
+	var zeroVal *entgql.Cursor[int]
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_restaurants_argsFirst(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["first"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+	if tmp, ok := rawArgs["first"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_restaurants_argsBefore(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*entgql.Cursor[int], error) {
+	if _, ok := rawArgs["before"]; !ok {
+		var zeroVal *entgql.Cursor[int]
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
+	if tmp, ok := rawArgs["before"]; ok {
+		return ec.unmarshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCursor(ctx, tmp)
+	}
+
+	var zeroVal *entgql.Cursor[int]
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_restaurants_argsLast(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["last"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("last"))
+	if tmp, ok := rawArgs["last"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
 	return zeroVal, nil
 }
 
@@ -2440,6 +2648,69 @@ func (ec *executionContext) fieldContext_Query_nodes(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_restaurants(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_restaurants(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Restaurants(rctx, fc.Args["after"].(*entgql.Cursor[int]), fc.Args["first"].(*int), fc.Args["before"].(*entgql.Cursor[int]), fc.Args["last"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ent.RestaurantConnection)
+	fc.Result = res
+	return ec.marshalNRestaurantConnection2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurantConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_restaurants(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_RestaurantConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_RestaurantConnection_pageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_RestaurantConnection_totalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RestaurantConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_restaurants_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_viewer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_viewer(ctx, field)
 	if err != nil {
@@ -3236,6 +3507,246 @@ func (ec *executionContext) fieldContext_Restaurant_owner(_ context.Context, fie
 				return ec.fieldContext_User_restaurants(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RestaurantConnection_edges(ctx context.Context, field graphql.CollectedField, obj *ent.RestaurantConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RestaurantConnection_edges(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.RestaurantEdge)
+	fc.Result = res
+	return ec.marshalORestaurantEdge2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurantEdge(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RestaurantConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RestaurantConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_RestaurantEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_RestaurantEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RestaurantEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RestaurantConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *ent.RestaurantConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RestaurantConnection_pageInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(entgql.PageInfo[int])
+	fc.Result = res
+	return ec.marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RestaurantConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RestaurantConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RestaurantConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *ent.RestaurantConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RestaurantConnection_totalCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RestaurantConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RestaurantConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RestaurantEdge_node(ctx context.Context, field graphql.CollectedField, obj *ent.RestaurantEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RestaurantEdge_node(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Restaurant)
+	fc.Result = res
+	return ec.marshalORestaurant2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurant(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RestaurantEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RestaurantEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Restaurant_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Restaurant_name(ctx, field)
+			case "address":
+				return ec.fieldContext_Restaurant_address(ctx, field)
+			case "owner":
+				return ec.fieldContext_Restaurant_owner(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Restaurant", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RestaurantEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *ent.RestaurantEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RestaurantEdge_cursor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(entgql.Cursor[int])
+	fc.Result = res
+	return ec.marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RestaurantEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RestaurantEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Cursor does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6438,6 +6949,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "restaurants":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_restaurants(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "viewer":
 			field := field
 
@@ -6725,6 +7258,93 @@ func (ec *executionContext) _Restaurant(ctx context.Context, sel ast.SelectionSe
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var restaurantConnectionImplementors = []string{"RestaurantConnection"}
+
+func (ec *executionContext) _RestaurantConnection(ctx context.Context, sel ast.SelectionSet, obj *ent.RestaurantConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, restaurantConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RestaurantConnection")
+		case "edges":
+			out.Values[i] = ec._RestaurantConnection_edges(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._RestaurantConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._RestaurantConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var restaurantEdgeImplementors = []string{"RestaurantEdge"}
+
+func (ec *executionContext) _RestaurantEdge(ctx context.Context, sel ast.SelectionSet, obj *ent.RestaurantEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, restaurantEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RestaurantEdge")
+		case "node":
+			out.Values[i] = ec._RestaurantEdge_node(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._RestaurantEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7416,6 +8036,16 @@ func (ec *executionContext) marshalNCredential2ᚖgithubᚗcomᚋtuoitrevohocᚋ
 	return ec._Credential(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor(ctx context.Context, v any) (entgql.Cursor[int], error) {
+	var res entgql.Cursor[int]
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCursor(ctx context.Context, sel ast.SelectionSet, v entgql.Cursor[int]) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, v any) (scalars.GUID, error) {
 	var res scalars.GUID
 	err := res.UnmarshalGQLContext(ctx, v)
@@ -7527,6 +8157,10 @@ func (ec *executionContext) marshalNNode2ᚕgithubᚗcomᚋtuoitrevohocᚋgofw�
 	return ret
 }
 
+func (ec *executionContext) marshalNPageInfo2entgoᚗioᚋcontribᚋentgqlᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v entgql.PageInfo[int]) graphql.Marshaler {
+	return ec._PageInfo(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNRefreshToken2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRefreshToken(ctx context.Context, sel ast.SelectionSet, v *ent.RefreshToken) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -7549,6 +8183,20 @@ func (ec *executionContext) marshalNRestaurant2ᚖgithubᚗcomᚋtuoitrevohocᚋ
 		return graphql.Null
 	}
 	return ec._Restaurant(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRestaurantConnection2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurantConnection(ctx context.Context, sel ast.SelectionSet, v ent.RestaurantConnection) graphql.Marshaler {
+	return ec._RestaurantConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRestaurantConnection2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurantConnection(ctx context.Context, sel ast.SelectionSet, v *ent.RestaurantConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RestaurantConnection(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNSaveRestaurantInput2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋgraphqlᚋmodelᚐSaveRestaurantInput(ctx context.Context, v any) (model.SaveRestaurantInput, error) {
@@ -8097,6 +8745,61 @@ func (ec *executionContext) marshalORestaurant2ᚕᚖgithubᚗcomᚋtuoitrevohoc
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalORestaurant2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurant(ctx context.Context, sel ast.SelectionSet, v *ent.Restaurant) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Restaurant(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalORestaurantEdge2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurantEdge(ctx context.Context, sel ast.SelectionSet, v []*ent.RestaurantEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalORestaurantEdge2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurantEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalORestaurantEdge2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurantEdge(ctx context.Context, sel ast.SelectionSet, v *ent.RestaurantEdge) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._RestaurantEdge(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v any) (string, error) {
