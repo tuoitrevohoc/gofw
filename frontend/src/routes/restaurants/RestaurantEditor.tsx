@@ -20,7 +20,7 @@ interface Restaurant {
 }
 
 interface RestaurantEditorProps {
-  restaurant: Restaurant;
+  restaurant?: Restaurant;
 }
 
 export default function RestaurantEditor({

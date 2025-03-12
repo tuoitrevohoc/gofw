@@ -1,9 +1,40 @@
 import { Add } from "@mui/icons-material";
-import { Button, Stack, Typography, Link } from "@mui/material";
+import {
+  Button,
+  Stack,
+  Typography,
+  Link,
+  Card,
+  CardContent,
+} from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import Page from "../../components/layout/Page";
-
+import { graphql, useLazyLoadQuery } from "react-relay";
+import { RestaurantListQuery } from "./__generated__/RestaurantListQuery.graphql";
+import { DataGrid } from "@mui/x-data-grid";
 export default function RestaurantList() {
+  const { restaurants } = useLazyLoadQuery<RestaurantListQuery>(
+    graphql`
+      query RestaurantListQuery {
+        restaurants {
+          edges {
+            node {
+              id
+              name
+              address
+            }
+          }
+          totalCount
+          pageInfo {
+            hasNextPage
+            startCursor
+          }
+        }
+      }
+    `,
+    {}
+  );
+
   return (
     <Page
       title="Restaurants"
@@ -12,6 +43,38 @@ export default function RestaurantList() {
         { label: "Restaurants", path: "/restaurants" },
       ]}
     >
+      {restaurants.totalCount === 0 ? <CreateRestaurantButton /> : <></>}
+      {restaurants.totalCount > 0 && (
+        <Card>
+          <CardContent>Your restaurants</CardContent>
+          <DataGrid
+            checkboxSelection
+            rows={restaurants.edges!.map((edge) => edge!.node!)}
+            columns={[
+              { field: "name", headerName: "Name", flex: 1 },
+              { field: "address", headerName: "Address", flex: 1 },
+            ]}
+            sx={{
+              border: "none",
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "lightgray",
+              },
+            }}
+            pageSizeOptions={[5, 10, 25]}
+            paginationModel={{
+              pageSize: 5,
+              page: 0,
+            }}
+          />
+        </Card>
+      )}
+    </Page>
+  );
+}
+
+function CreateRestaurantButton() {
+  return (
+    <>
       <Typography variant="body1">
         You currently don't have any restaurants. Please create one.
       </Typography>
@@ -22,6 +85,6 @@ export default function RestaurantList() {
           </Button>
         </Link>
       </Stack>
-    </Page>
+    </>
   );
 }
