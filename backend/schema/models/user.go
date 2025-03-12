@@ -45,6 +45,7 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("credentials", Credential.Type),
 		edge.To("access_tokens", RefreshToken.Type),
+		edge.To("restaurants", Restaurant.Type),
 	}
 }
 

@@ -15,6 +15,7 @@ import { graphql, useLazyLoadQuery } from "react-relay";
 const LoginPage = lazy(() => import("./auth/LoginPage"));
 const ErrorPage = lazy(() => import("./error/ErrorPage"));
 const RestaurantList = lazy(() => import("./restaurants/RestaurantList"));
+const NewRestaurant = lazy(() => import("./restaurants/NewRestaurant"));
 
 const SidebarMenu: MenuItem[] = [
   { icon: Analytics, label: "Home", path: "/" },
@@ -42,6 +43,7 @@ export default function AppRoutes() {
         <Route path="/" element={<DefaultLayout menuItems={SidebarMenu} />}>
           <Route path="/" element={<Home />} />
           <Route path="/restaurants" element={<RestaurantList />} />
+          <Route path="/restaurants/add" element={<NewRestaurant />} />
         </Route>
         <Route
           path="/*"

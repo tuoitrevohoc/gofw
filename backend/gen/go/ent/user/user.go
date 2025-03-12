@@ -28,6 +28,8 @@ const (
 	EdgeCredentials = "credentials"
 	// EdgeAccessTokens holds the string denoting the access_tokens edge name in mutations.
 	EdgeAccessTokens = "access_tokens"
+	// EdgeRestaurants holds the string denoting the restaurants edge name in mutations.
+	EdgeRestaurants = "restaurants"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// CredentialsTable is the table that holds the credentials relation/edge.
@@ -44,6 +46,13 @@ const (
 	AccessTokensInverseTable = "refresh_tokens"
 	// AccessTokensColumn is the table column denoting the access_tokens relation/edge.
 	AccessTokensColumn = "user_access_tokens"
+	// RestaurantsTable is the table that holds the restaurants relation/edge.
+	RestaurantsTable = "restaurants"
+	// RestaurantsInverseTable is the table name for the Restaurant entity.
+	// It exists in this package in order to avoid circular dependency with the "restaurant" package.
+	RestaurantsInverseTable = "restaurants"
+	// RestaurantsColumn is the table column denoting the restaurants relation/edge.
+	RestaurantsColumn = "user_restaurants"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -139,6 +148,20 @@ func ByAccessTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAccessTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByRestaurantsCount orders the results by restaurants count.
+func ByRestaurantsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRestaurantsStep(), opts...)
+	}
+}
+
+// ByRestaurants orders the results by restaurants terms.
+func ByRestaurants(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRestaurantsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCredentialsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -151,5 +174,12 @@ func newAccessTokensStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccessTokensInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AccessTokensTable, AccessTokensColumn),
+	)
+}
+func newRestaurantsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RestaurantsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RestaurantsTable, RestaurantsColumn),
 	)
 }

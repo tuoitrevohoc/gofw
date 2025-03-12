@@ -1,0 +1,9 @@
+input SaveRestaurantInput {
+  id: ID
+  name: String!
+  address: String!
+}
+
+extend type Mutation {
+  saveRestaurant(input: SaveRestaurantInput!): Restaurant!
+}

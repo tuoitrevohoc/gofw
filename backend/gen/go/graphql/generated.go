@@ -46,6 +46,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
 	RefreshToken() RefreshTokenResolver
+	Restaurant() RestaurantResolver
 	User() UserResolver
 	Viewer() ViewerResolver
 }
@@ -80,6 +81,7 @@ type ComplexityRoot struct {
 		BeginAuthnRegistration  func(childComplexity int, email string) int
 		FinishAuthnLogin        func(childComplexity int, response string) int
 		FinishAuthnRegistration func(childComplexity int, email string, response string) int
+		SaveRestaurant          func(childComplexity int, input model.SaveRestaurantInput) int
 		SignIn                  func(childComplexity int, input model.SignInInput) int
 		SignOut                 func(childComplexity int) int
 		SignUp                  func(childComplexity int, input model.SignUpInput) int
@@ -110,6 +112,13 @@ type ComplexityRoot struct {
 		UserAgent func(childComplexity int) int
 	}
 
+	Restaurant struct {
+		Address func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Name    func(childComplexity int) int
+		Owner   func(childComplexity int) int
+	}
+
 	User struct {
 		AccessTokens         func(childComplexity int) int
 		Avatar               func(childComplexity int) int
@@ -120,6 +129,7 @@ type ComplexityRoot struct {
 		LastSignInAt         func(childComplexity int) int
 		Name                 func(childComplexity int) int
 		Password             func(childComplexity int) int
+		Restaurants          func(childComplexity int) int
 	}
 
 	Viewer struct {
@@ -134,6 +144,7 @@ type CredentialResolver interface {
 	ID(ctx context.Context, obj *ent.Credential) (*scalars.GUID, error)
 }
 type MutationResolver interface {
+	SaveRestaurant(ctx context.Context, input model.SaveRestaurantInput) (*ent.Restaurant, error)
 	SignUp(ctx context.Context, input model.SignUpInput) (*model.AccessToken, error)
 	SignIn(ctx context.Context, input model.SignInInput) (*model.AccessToken, error)
 	BeginAuthnRegistration(ctx context.Context, email string) (*model.AuthnRegistrationResponse, error)
@@ -149,6 +160,9 @@ type QueryResolver interface {
 }
 type RefreshTokenResolver interface {
 	ID(ctx context.Context, obj *ent.RefreshToken) (*scalars.GUID, error)
+}
+type RestaurantResolver interface {
+	ID(ctx context.Context, obj *ent.Restaurant) (*scalars.GUID, error)
 }
 type UserResolver interface {
 	ID(ctx context.Context, obj *ent.User) (*scalars.GUID, error)
@@ -281,6 +295,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.FinishAuthnRegistration(childComplexity, args["email"].(string), args["response"].(string)), true
+
+	case "Mutation.saveRestaurant":
+		if e.complexity.Mutation.SaveRestaurant == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_saveRestaurant_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SaveRestaurant(childComplexity, args["input"].(model.SaveRestaurantInput)), true
 
 	case "Mutation.signIn":
 		if e.complexity.Mutation.SignIn == nil {
@@ -435,6 +461,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RefreshToken.UserAgent(childComplexity), true
 
+	case "Restaurant.address":
+		if e.complexity.Restaurant.Address == nil {
+			break
+		}
+
+		return e.complexity.Restaurant.Address(childComplexity), true
+
+	case "Restaurant.id":
+		if e.complexity.Restaurant.ID == nil {
+			break
+		}
+
+		return e.complexity.Restaurant.ID(childComplexity), true
+
+	case "Restaurant.name":
+		if e.complexity.Restaurant.Name == nil {
+			break
+		}
+
+		return e.complexity.Restaurant.Name(childComplexity), true
+
+	case "Restaurant.owner":
+		if e.complexity.Restaurant.Owner == nil {
+			break
+		}
+
+		return e.complexity.Restaurant.Owner(childComplexity), true
+
 	case "User.accessTokens":
 		if e.complexity.User.AccessTokens == nil {
 			break
@@ -498,6 +552,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Password(childComplexity), true
 
+	case "User.restaurants":
+		if e.complexity.User.Restaurants == nil {
+			break
+		}
+
+		return e.complexity.User.Restaurants(childComplexity), true
+
 	case "Viewer.isAuthenticated":
 		if e.complexity.Viewer.IsAuthenticated == nil {
 			break
@@ -534,6 +595,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputSaveRestaurantInput,
 		ec.unmarshalInputSignInInput,
 		ec.unmarshalInputSignUpInput,
 	)
@@ -722,6 +784,12 @@ type RefreshToken implements Node {
   userAgent: String!
   user: User!
 }
+type Restaurant implements Node {
+  id: ID!
+  name: String!
+  address: String!
+  owner: User!
+}
 """
 The builtin Time type
 """
@@ -736,6 +804,17 @@ type User implements Node {
   lastSignInAt: Time
   credentials: [Credential!]
   accessTokens: [RefreshToken!]
+  restaurants: [Restaurant!]
+}
+`, BuiltIn: false},
+	{Name: "../../../schema/graphql/restaurant.graphql", Input: `input SaveRestaurantInput {
+  id: ID
+  name: String!
+  address: String!
+}
+
+extend type Mutation {
+  saveRestaurant(input: SaveRestaurantInput!): Restaurant!
 }
 `, BuiltIn: false},
 	{Name: "../../../schema/graphql/user.graphql", Input: `type Viewer {
@@ -897,6 +976,34 @@ func (ec *executionContext) field_Mutation_finishAuthnRegistration_argsResponse(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_saveRestaurant_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_saveRestaurant_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_saveRestaurant_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.SaveRestaurantInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.SaveRestaurantInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSaveRestaurantInput2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋgraphqlᚋmodelᚐSaveRestaurantInput(ctx, tmp)
+	}
+
+	var zeroVal model.SaveRestaurantInput
 	return zeroVal, nil
 }
 
@@ -1579,9 +1686,76 @@ func (ec *executionContext) fieldContext_Credential_user(_ context.Context, fiel
 				return ec.fieldContext_User_credentials(ctx, field)
 			case "accessTokens":
 				return ec.fieldContext_User_accessTokens(ctx, field)
+			case "restaurants":
+				return ec.fieldContext_User_restaurants(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_saveRestaurant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_saveRestaurant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SaveRestaurant(rctx, fc.Args["input"].(model.SaveRestaurantInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Restaurant)
+	fc.Result = res
+	return ec.marshalNRestaurant2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurant(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_saveRestaurant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Restaurant_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Restaurant_name(ctx, field)
+			case "address":
+				return ec.fieldContext_Restaurant_address(ctx, field)
+			case "owner":
+				return ec.fieldContext_Restaurant_owner(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Restaurant", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_saveRestaurant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -2860,6 +3034,206 @@ func (ec *executionContext) fieldContext_RefreshToken_user(_ context.Context, fi
 				return ec.fieldContext_User_credentials(ctx, field)
 			case "accessTokens":
 				return ec.fieldContext_User_accessTokens(ctx, field)
+			case "restaurants":
+				return ec.fieldContext_User_restaurants(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Restaurant_id(ctx context.Context, field graphql.CollectedField, obj *ent.Restaurant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Restaurant_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Restaurant().ID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*scalars.GUID)
+	fc.Result = res
+	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Restaurant_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Restaurant",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Restaurant_name(ctx context.Context, field graphql.CollectedField, obj *ent.Restaurant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Restaurant_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Restaurant_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Restaurant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Restaurant_address(ctx context.Context, field graphql.CollectedField, obj *ent.Restaurant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Restaurant_address(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Address, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Restaurant_address(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Restaurant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Restaurant_owner(ctx context.Context, field graphql.CollectedField, obj *ent.Restaurant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Restaurant_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Owner(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ent.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Restaurant_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Restaurant",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "email":
+				return ec.fieldContext_User_email(ctx, field)
+			case "password":
+				return ec.fieldContext_User_password(ctx, field)
+			case "avatar":
+				return ec.fieldContext_User_avatar(ctx, field)
+			case "finishedRegistration":
+				return ec.fieldContext_User_finishedRegistration(ctx, field)
+			case "lastSignInAt":
+				return ec.fieldContext_User_lastSignInAt(ctx, field)
+			case "credentials":
+				return ec.fieldContext_User_credentials(ctx, field)
+			case "accessTokens":
+				return ec.fieldContext_User_accessTokens(ctx, field)
+			case "restaurants":
+				return ec.fieldContext_User_restaurants(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -3275,6 +3649,57 @@ func (ec *executionContext) fieldContext_User_accessTokens(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _User_restaurants(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_restaurants(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Restaurants(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Restaurant)
+	fc.Result = res
+	return ec.marshalORestaurant2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_restaurants(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Restaurant_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Restaurant_name(ctx, field)
+			case "address":
+				return ec.fieldContext_Restaurant_address(ctx, field)
+			case "owner":
+				return ec.fieldContext_Restaurant_owner(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Restaurant", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Viewer_profile(ctx context.Context, field graphql.CollectedField, obj *model.Viewer) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Viewer_profile(ctx, field)
 	if err != nil {
@@ -3332,6 +3757,8 @@ func (ec *executionContext) fieldContext_Viewer_profile(_ context.Context, field
 				return ec.fieldContext_User_credentials(ctx, field)
 			case "accessTokens":
 				return ec.fieldContext_User_accessTokens(ctx, field)
+			case "restaurants":
+				return ec.fieldContext_User_restaurants(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5416,6 +5843,47 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputSaveRestaurantInput(ctx context.Context, obj any) (model.SaveRestaurantInput, error) {
+	var it model.SaveRestaurantInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "address"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "address":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Address = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSignInInput(ctx context.Context, obj any) (model.SignInInput, error) {
 	var it model.SignInInput
 	asMap := map[string]any{}
@@ -5502,6 +5970,11 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._RefreshToken(ctx, sel, obj)
+	case *ent.Restaurant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Restaurant(ctx, sel, obj)
 	case *ent.User:
 		if obj == nil {
 			return graphql.Null
@@ -5778,6 +6251,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "saveRestaurant":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_saveRestaurant(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "signUp":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_signUp(ctx, field)
@@ -6152,6 +6632,122 @@ func (ec *executionContext) _RefreshToken(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var restaurantImplementors = []string{"Restaurant", "Node"}
+
+func (ec *executionContext) _Restaurant(ctx context.Context, sel ast.SelectionSet, obj *ent.Restaurant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, restaurantImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Restaurant")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Restaurant_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "name":
+			out.Values[i] = ec._Restaurant_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "address":
+			out.Values[i] = ec._Restaurant_address(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "owner":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Restaurant_owner(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var userImplementors = []string{"User", "Node"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *ent.User) graphql.Marshaler {
@@ -6260,6 +6856,39 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._User_accessTokens(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "restaurants":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_restaurants(ctx, field, obj)
 				return res
 			}
 
@@ -6908,6 +7537,25 @@ func (ec *executionContext) marshalNRefreshToken2ᚖgithubᚗcomᚋtuoitrevohoc�
 	return ec._RefreshToken(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNRestaurant2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurant(ctx context.Context, sel ast.SelectionSet, v ent.Restaurant) graphql.Marshaler {
+	return ec._Restaurant(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRestaurant2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurant(ctx context.Context, sel ast.SelectionSet, v *ent.Restaurant) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Restaurant(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSaveRestaurantInput2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋgraphqlᚋmodelᚐSaveRestaurantInput(ctx context.Context, v any) (model.SaveRestaurantInput, error) {
+	res, err := ec.unmarshalInputSaveRestaurantInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNSignInInput2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋgraphqlᚋmodelᚐSignInInput(ctx context.Context, v any) (model.SignInInput, error) {
 	res, err := ec.unmarshalInputSignInInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7385,6 +8033,53 @@ func (ec *executionContext) marshalORefreshToken2ᚕᚖgithubᚗcomᚋtuoitrevoh
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNRefreshToken2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRefreshToken(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalORestaurant2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurantᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.Restaurant) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRestaurant2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋgenᚋgoᚋentᚐRestaurant(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

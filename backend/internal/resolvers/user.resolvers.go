@@ -205,11 +205,7 @@ func (r *viewerResolver) Profile(ctx context.Context, obj *model.Viewer) (*ent.U
 	return r.client.User.Get(ctx, obj.UserID.Id())
 }
 
-// Mutation returns graphql1.MutationResolver implementation.
-func (r *Resolver) Mutation() graphql1.MutationResolver { return &mutationResolver{r} }
-
 // Viewer returns graphql1.ViewerResolver implementation.
 func (r *Resolver) Viewer() graphql1.ViewerResolver { return &viewerResolver{r} }
 
-type mutationResolver struct{ *Resolver }
 type viewerResolver struct{ *Resolver }

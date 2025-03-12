@@ -53,6 +53,7 @@ https://relay.dev/graphql/connections.htm#sec-Cursor
 scalar Cursor
 
 type Mutation {
+  saveRestaurant(input: SaveRestaurantInput!): Restaurant!
   signUp(input: SignUpInput!): AccessToken!
   signIn(input: SignInInput!): AccessToken!
   beginAuthnRegistration(email: String!): AuthnRegistrationResponse!
@@ -127,6 +128,19 @@ type RefreshToken implements Node {
   user: User!
 }
 
+type Restaurant implements Node {
+  id: ID!
+  name: String!
+  address: String!
+  owner: User!
+}
+
+input SaveRestaurantInput {
+  id: ID
+  name: String!
+  address: String!
+}
+
 input SignInInput {
   email: String!
   password: String!
@@ -150,6 +164,7 @@ type User implements Node {
   lastSignInAt: Time
   credentials: [Credential!]
   accessTokens: [RefreshToken!]
+  restaurants: [Restaurant!]
 }
 
 type Viewer {

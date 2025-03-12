@@ -15,6 +15,7 @@ import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/predicate"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/restaurant"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
 
@@ -27,10 +28,12 @@ type UserQuery struct {
 	predicates            []predicate.User
 	withCredentials       *CredentialQuery
 	withAccessTokens      *RefreshTokenQuery
+	withRestaurants       *RestaurantQuery
 	modifiers             []func(*sql.Selector)
 	loadTotal             []func(context.Context, []*User) error
 	withNamedCredentials  map[string]*CredentialQuery
 	withNamedAccessTokens map[string]*RefreshTokenQuery
+	withNamedRestaurants  map[string]*RestaurantQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -104,6 +107,28 @@ func (uq *UserQuery) QueryAccessTokens() *RefreshTokenQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(refreshtoken.Table, refreshtoken.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.AccessTokensTable, user.AccessTokensColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRestaurants chains the current query on the "restaurants" edge.
+func (uq *UserQuery) QueryRestaurants() *RestaurantQuery {
+	query := (&RestaurantClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(restaurant.Table, restaurant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.RestaurantsTable, user.RestaurantsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -305,6 +330,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		predicates:       append([]predicate.User{}, uq.predicates...),
 		withCredentials:  uq.withCredentials.Clone(),
 		withAccessTokens: uq.withAccessTokens.Clone(),
+		withRestaurants:  uq.withRestaurants.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -330,6 +356,17 @@ func (uq *UserQuery) WithAccessTokens(opts ...func(*RefreshTokenQuery)) *UserQue
 		opt(query)
 	}
 	uq.withAccessTokens = query
+	return uq
+}
+
+// WithRestaurants tells the query-builder to eager-load the nodes that are connected to
+// the "restaurants" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithRestaurants(opts ...func(*RestaurantQuery)) *UserQuery {
+	query := (&RestaurantClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withRestaurants = query
 	return uq
 }
 
@@ -411,9 +448,10 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			uq.withCredentials != nil,
 			uq.withAccessTokens != nil,
+			uq.withRestaurants != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -451,6 +489,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := uq.withRestaurants; query != nil {
+		if err := uq.loadRestaurants(ctx, query, nodes,
+			func(n *User) { n.Edges.Restaurants = []*Restaurant{} },
+			func(n *User, e *Restaurant) { n.Edges.Restaurants = append(n.Edges.Restaurants, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range uq.withNamedCredentials {
 		if err := uq.loadCredentials(ctx, query, nodes,
 			func(n *User) { n.appendNamedCredentials(name) },
@@ -462,6 +507,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadAccessTokens(ctx, query, nodes,
 			func(n *User) { n.appendNamedAccessTokens(name) },
 			func(n *User, e *RefreshToken) { n.appendNamedAccessTokens(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range uq.withNamedRestaurants {
+		if err := uq.loadRestaurants(ctx, query, nodes,
+			func(n *User) { n.appendNamedRestaurants(name) },
+			func(n *User, e *Restaurant) { n.appendNamedRestaurants(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -530,6 +582,37 @@ func (uq *UserQuery) loadAccessTokens(ctx context.Context, query *RefreshTokenQu
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_access_tokens" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadRestaurants(ctx context.Context, query *RestaurantQuery, nodes []*User, init func(*User), assign func(*User, *Restaurant)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.RestaurantsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_restaurants
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_restaurants" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_restaurants" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -645,6 +728,20 @@ func (uq *UserQuery) WithNamedAccessTokens(name string, opts ...func(*RefreshTok
 		uq.withNamedAccessTokens = make(map[string]*RefreshTokenQuery)
 	}
 	uq.withNamedAccessTokens[name] = query
+	return uq
+}
+
+// WithNamedRestaurants tells the query-builder to eager-load the nodes that are connected to the "restaurants"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithNamedRestaurants(name string, opts ...func(*RestaurantQuery)) *UserQuery {
+	query := (&RestaurantClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if uq.withNamedRestaurants == nil {
+		uq.withNamedRestaurants = make(map[string]*RestaurantQuery)
+	}
+	uq.withNamedRestaurants[name] = query
 	return uq
 }
 

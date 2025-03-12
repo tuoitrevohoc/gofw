@@ -63,6 +63,27 @@ var (
 			},
 		},
 	}
+	// RestaurantsColumns holds the columns for the "restaurants" table.
+	RestaurantsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "address", Type: field.TypeString},
+		{Name: "user_restaurants", Type: field.TypeInt},
+	}
+	// RestaurantsTable holds the schema information for the "restaurants" table.
+	RestaurantsTable = &schema.Table{
+		Name:       "restaurants",
+		Columns:    RestaurantsColumns,
+		PrimaryKey: []*schema.Column{RestaurantsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "restaurants_users_restaurants",
+				Columns:    []*schema.Column{RestaurantsColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -90,6 +111,7 @@ var (
 	Tables = []*schema.Table{
 		CredentialsTable,
 		RefreshTokensTable,
+		RestaurantsTable,
 		UsersTable,
 	}
 )
@@ -102,6 +124,10 @@ func init() {
 	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
 	RefreshTokensTable.Annotation = &entsql.Annotation{
 		IncrementStart: func(i int) *int { return &i }(8589934592),
+	}
+	RestaurantsTable.ForeignKeys[0].RefTable = UsersTable
+	RestaurantsTable.Annotation = &entsql.Annotation{
+		IncrementStart: func(i int) *int { return &i }(17179869184),
 	}
 	UsersTable.Annotation = &entsql.Annotation{
 		IncrementStart: func(i int) *int { return &i }(12884901888),

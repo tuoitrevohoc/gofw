@@ -21,6 +21,12 @@ type AuthnRegistrationResponse struct {
 	CredentialCreation string `json:"credentialCreation"`
 }
 
+type SaveRestaurantInput struct {
+	ID      *scalars.GUID `json:"id,omitempty"`
+	Name    string        `json:"name"`
+	Address string        `json:"address"`
+}
+
 type SignInInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`

@@ -41,14 +41,17 @@ type UserEdges struct {
 	Credentials []*Credential `json:"credentials,omitempty"`
 	// AccessTokens holds the value of the access_tokens edge.
 	AccessTokens []*RefreshToken `json:"access_tokens,omitempty"`
+	// Restaurants holds the value of the restaurants edge.
+	Restaurants []*Restaurant `json:"restaurants,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 	// totalCount holds the count of the edges above.
-	totalCount [2]map[string]int
+	totalCount [3]map[string]int
 
 	namedCredentials  map[string][]*Credential
 	namedAccessTokens map[string][]*RefreshToken
+	namedRestaurants  map[string][]*Restaurant
 }
 
 // CredentialsOrErr returns the Credentials value or an error if the edge
@@ -67,6 +70,15 @@ func (e UserEdges) AccessTokensOrErr() ([]*RefreshToken, error) {
 		return e.AccessTokens, nil
 	}
 	return nil, &NotLoadedError{edge: "access_tokens"}
+}
+
+// RestaurantsOrErr returns the Restaurants value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) RestaurantsOrErr() ([]*Restaurant, error) {
+	if e.loadedTypes[2] {
+		return e.Restaurants, nil
+	}
+	return nil, &NotLoadedError{edge: "restaurants"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -162,6 +174,11 @@ func (u *User) QueryAccessTokens() *RefreshTokenQuery {
 	return NewUserClient(u.config).QueryAccessTokens(u)
 }
 
+// QueryRestaurants queries the "restaurants" edge of the User entity.
+func (u *User) QueryRestaurants() *RestaurantQuery {
+	return NewUserClient(u.config).QueryRestaurants(u)
+}
+
 // Update returns a builder for updating this User.
 // Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -251,6 +268,30 @@ func (u *User) appendNamedAccessTokens(name string, edges ...*RefreshToken) {
 		u.Edges.namedAccessTokens[name] = []*RefreshToken{}
 	} else {
 		u.Edges.namedAccessTokens[name] = append(u.Edges.namedAccessTokens[name], edges...)
+	}
+}
+
+// NamedRestaurants returns the Restaurants named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (u *User) NamedRestaurants(name string) ([]*Restaurant, error) {
+	if u.Edges.namedRestaurants == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := u.Edges.namedRestaurants[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (u *User) appendNamedRestaurants(name string, edges ...*Restaurant) {
+	if u.Edges.namedRestaurants == nil {
+		u.Edges.namedRestaurants = make(map[string][]*Restaurant)
+	}
+	if len(edges) == 0 {
+		u.Edges.namedRestaurants[name] = []*Restaurant{}
+	} else {
+		u.Edges.namedRestaurants[name] = append(u.Edges.namedRestaurants[name], edges...)
 	}
 }
 

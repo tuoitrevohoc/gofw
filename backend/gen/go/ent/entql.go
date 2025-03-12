@@ -6,6 +6,7 @@ import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/predicate"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/restaurant"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 
 	"entgo.io/ent/dialect/sql"
@@ -16,7 +17,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 3)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 4)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   credential.Table,
@@ -53,6 +54,21 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 	}
 	graph.Nodes[2] = &sqlgraph.Node{
+		NodeSpec: sqlgraph.NodeSpec{
+			Table:   restaurant.Table,
+			Columns: restaurant.Columns,
+			ID: &sqlgraph.FieldSpec{
+				Type:   field.TypeInt,
+				Column: restaurant.FieldID,
+			},
+		},
+		Type: "Restaurant",
+		Fields: map[string]*sqlgraph.FieldSpec{
+			restaurant.FieldName:    {Type: field.TypeString, Column: restaurant.FieldName},
+			restaurant.FieldAddress: {Type: field.TypeString, Column: restaurant.FieldAddress},
+		},
+	}
+	graph.Nodes[3] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   user.Table,
 			Columns: user.Columns,
@@ -96,6 +112,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		"User",
 	)
 	graph.MustAddE(
+		"owner",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   restaurant.OwnerTable,
+			Columns: []string{restaurant.OwnerColumn},
+			Bidi:    false,
+		},
+		"Restaurant",
+		"User",
+	)
+	graph.MustAddE(
 		"credentials",
 		&sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -118,6 +146,18 @@ var schemaGraph = func() *sqlgraph.Schema {
 		},
 		"User",
 		"RefreshToken",
+	)
+	graph.MustAddE(
+		"restaurants",
+		&sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RestaurantsTable,
+			Columns: []string{user.RestaurantsColumn},
+			Bidi:    false,
+		},
+		"User",
+		"Restaurant",
 	)
 	return graph
 }()
@@ -282,6 +322,70 @@ func (f *RefreshTokenFilter) WhereHasUserWith(preds ...predicate.User) {
 }
 
 // addPredicate implements the predicateAdder interface.
+func (rq *RestaurantQuery) addPredicate(pred func(s *sql.Selector)) {
+	rq.predicates = append(rq.predicates, pred)
+}
+
+// Filter returns a Filter implementation to apply filters on the RestaurantQuery builder.
+func (rq *RestaurantQuery) Filter() *RestaurantFilter {
+	return &RestaurantFilter{config: rq.config, predicateAdder: rq}
+}
+
+// addPredicate implements the predicateAdder interface.
+func (m *RestaurantMutation) addPredicate(pred func(s *sql.Selector)) {
+	m.predicates = append(m.predicates, pred)
+}
+
+// Filter returns an entql.Where implementation to apply filters on the RestaurantMutation builder.
+func (m *RestaurantMutation) Filter() *RestaurantFilter {
+	return &RestaurantFilter{config: m.config, predicateAdder: m}
+}
+
+// RestaurantFilter provides a generic filtering capability at runtime for RestaurantQuery.
+type RestaurantFilter struct {
+	predicateAdder
+	config
+}
+
+// Where applies the entql predicate on the query filter.
+func (f *RestaurantFilter) Where(p entql.P) {
+	f.addPredicate(func(s *sql.Selector) {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
+			s.AddError(err)
+		}
+	})
+}
+
+// WhereID applies the entql int predicate on the id field.
+func (f *RestaurantFilter) WhereID(p entql.IntP) {
+	f.Where(p.Field(restaurant.FieldID))
+}
+
+// WhereName applies the entql string predicate on the name field.
+func (f *RestaurantFilter) WhereName(p entql.StringP) {
+	f.Where(p.Field(restaurant.FieldName))
+}
+
+// WhereAddress applies the entql string predicate on the address field.
+func (f *RestaurantFilter) WhereAddress(p entql.StringP) {
+	f.Where(p.Field(restaurant.FieldAddress))
+}
+
+// WhereHasOwner applies a predicate to check if query has an edge owner.
+func (f *RestaurantFilter) WhereHasOwner() {
+	f.Where(entql.HasEdge("owner"))
+}
+
+// WhereHasOwnerWith applies a predicate to check if query has an edge owner with a given conditions (other predicates).
+func (f *RestaurantFilter) WhereHasOwnerWith(preds ...predicate.User) {
+	f.Where(entql.HasEdgeWith("owner", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// addPredicate implements the predicateAdder interface.
 func (uq *UserQuery) addPredicate(pred func(s *sql.Selector)) {
 	uq.predicates = append(uq.predicates, pred)
 }
@@ -310,7 +414,7 @@ type UserFilter struct {
 // Where applies the entql predicate on the query filter.
 func (f *UserFilter) Where(p entql.P) {
 	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
+		if err := schemaGraph.EvalP(schemaGraph.Nodes[3].Type, p, s); err != nil {
 			s.AddError(err)
 		}
 	})
@@ -373,6 +477,20 @@ func (f *UserFilter) WhereHasAccessTokens() {
 // WhereHasAccessTokensWith applies a predicate to check if query has an edge access_tokens with a given conditions (other predicates).
 func (f *UserFilter) WhereHasAccessTokensWith(preds ...predicate.RefreshToken) {
 	f.Where(entql.HasEdgeWith("access_tokens", sqlgraph.WrapFunc(func(s *sql.Selector) {
+		for _, p := range preds {
+			p(s)
+		}
+	})))
+}
+
+// WhereHasRestaurants applies a predicate to check if query has an edge restaurants.
+func (f *UserFilter) WhereHasRestaurants() {
+	f.Where(entql.HasEdge("restaurants"))
+}
+
+// WhereHasRestaurantsWith applies a predicate to check if query has an edge restaurants with a given conditions (other predicates).
+func (f *UserFilter) WhereHasRestaurantsWith(preds ...predicate.Restaurant) {
+	f.Where(entql.HasEdgeWith("restaurants", sqlgraph.WrapFunc(func(s *sql.Selector) {
 		for _, p := range preds {
 			p(s)
 		}

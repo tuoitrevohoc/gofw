@@ -12,5 +12,8 @@ type Credential func(*sql.Selector)
 // RefreshToken is the predicate function for refreshtoken builders.
 type RefreshToken func(*sql.Selector)
 
+// Restaurant is the predicate function for restaurant builders.
+type Restaurant func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/restaurant"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
 
@@ -77,6 +78,7 @@ func checkColumn(table, column string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			credential.Table:   credential.ValidColumn,
 			refreshtoken.Table: refreshtoken.ValidColumn,
+			restaurant.Table:   restaurant.ValidColumn,
 			user.Table:         user.ValidColumn,
 		})
 	})

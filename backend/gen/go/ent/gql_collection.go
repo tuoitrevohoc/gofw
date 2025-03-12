@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/restaurant"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
 
@@ -197,6 +198,86 @@ func newRefreshTokenPaginateArgs(rv map[string]any) *refreshtokenPaginateArgs {
 }
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (r *RestaurantQuery) CollectFields(ctx context.Context, satisfies ...string) (*RestaurantQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return r, nil
+	}
+	if err := r.collectField(ctx, false, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (r *RestaurantQuery) collectField(ctx context.Context, oneNode bool, opCtx *graphql.OperationContext, collected graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	var (
+		unknownSeen    bool
+		fieldSeen      = make(map[string]struct{}, len(restaurant.Columns))
+		selectedFields = []string{restaurant.FieldID}
+	)
+	for _, field := range graphql.CollectFields(opCtx, collected.Selections, satisfies) {
+		switch field.Name {
+
+		case "owner":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&UserClient{config: r.config}).Query()
+			)
+			if err := query.collectField(ctx, oneNode, opCtx, field, path, mayAddCondition(satisfies, userImplementors)...); err != nil {
+				return err
+			}
+			r.withOwner = query
+		case "name":
+			if _, ok := fieldSeen[restaurant.FieldName]; !ok {
+				selectedFields = append(selectedFields, restaurant.FieldName)
+				fieldSeen[restaurant.FieldName] = struct{}{}
+			}
+		case "address":
+			if _, ok := fieldSeen[restaurant.FieldAddress]; !ok {
+				selectedFields = append(selectedFields, restaurant.FieldAddress)
+				fieldSeen[restaurant.FieldAddress] = struct{}{}
+			}
+		case "id":
+		case "__typename":
+		default:
+			unknownSeen = true
+		}
+	}
+	if !unknownSeen {
+		r.Select(selectedFields...)
+	}
+	return nil
+}
+
+type restaurantPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []RestaurantPaginateOption
+}
+
+func newRestaurantPaginateArgs(rv map[string]any) *restaurantPaginateArgs {
+	args := &restaurantPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
 func (u *UserQuery) CollectFields(ctx context.Context, satisfies ...string) (*UserQuery, error) {
 	fc := graphql.GetFieldContext(ctx)
 	if fc == nil {
@@ -241,6 +322,19 @@ func (u *UserQuery) collectField(ctx context.Context, oneNode bool, opCtx *graph
 				return err
 			}
 			u.WithNamedAccessTokens(alias, func(wq *RefreshTokenQuery) {
+				*wq = *query
+			})
+
+		case "restaurants":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = (&RestaurantClient{config: u.config}).Query()
+			)
+			if err := query.collectField(ctx, false, opCtx, field, path, mayAddCondition(satisfies, restaurantImplementors)...); err != nil {
+				return err
+			}
+			u.WithNamedRestaurants(alias, func(wq *RestaurantQuery) {
 				*wq = *query
 			})
 		case "name":

@@ -9,6 +9,9 @@ import (
 	"fmt"
 
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/restaurant"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	graphql1 "github.com/tuoitrevohoc/gofw/backend/gen/go/graphql"
 	"github.com/tuoitrevohoc/gofw/backend/internal/scalars"
@@ -16,7 +19,7 @@ import (
 
 // ID is the resolver for the id field.
 func (r *credentialResolver) ID(ctx context.Context, obj *ent.Credential) (*scalars.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return scalars.NewGUID(string(credential.Table), obj.ID), nil
 }
 
 // Node is the resolver for the node field.
@@ -31,7 +34,12 @@ func (r *queryResolver) Nodes(ctx context.Context, ids []*scalars.GUID) ([]ent.N
 
 // ID is the resolver for the id field.
 func (r *refreshTokenResolver) ID(ctx context.Context, obj *ent.RefreshToken) (*scalars.GUID, error) {
-	panic(fmt.Errorf("not implemented: ID - id"))
+	return scalars.NewGUID(string(refreshtoken.Table), obj.ID), nil
+}
+
+// ID is the resolver for the id field.
+func (r *restaurantResolver) ID(ctx context.Context, obj *ent.Restaurant) (*scalars.GUID, error) {
+	return scalars.NewGUID(string(restaurant.Table), obj.ID), nil
 }
 
 // ID is the resolver for the id field.
@@ -48,10 +56,14 @@ func (r *Resolver) Query() graphql1.QueryResolver { return &queryResolver{r} }
 // RefreshToken returns graphql1.RefreshTokenResolver implementation.
 func (r *Resolver) RefreshToken() graphql1.RefreshTokenResolver { return &refreshTokenResolver{r} }
 
+// Restaurant returns graphql1.RestaurantResolver implementation.
+func (r *Resolver) Restaurant() graphql1.RestaurantResolver { return &restaurantResolver{r} }
+
 // User returns graphql1.UserResolver implementation.
 func (r *Resolver) User() graphql1.UserResolver { return &userResolver{r} }
 
 type credentialResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type refreshTokenResolver struct{ *Resolver }
+type restaurantResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

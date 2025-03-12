@@ -87,6 +87,12 @@ type RefreshToken implements Node {
   userAgent: String!
   user: User!
 }
+type Restaurant implements Node {
+  id: ID!
+  name: String!
+  address: String!
+  owner: User!
+}
 """
 The builtin Time type
 """
@@ -101,4 +107,5 @@ type User implements Node {
   lastSignInAt: Time
   credentials: [Credential!]
   accessTokens: [RefreshToken!]
+  restaurants: [Restaurant!]
 }

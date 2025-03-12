@@ -33,6 +33,18 @@ func (f RefreshTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RefreshTokenMutation", m)
 }
 
+// The RestaurantFunc type is an adapter to allow the use of ordinary
+// function as Restaurant mutator.
+type RestaurantFunc func(context.Context, *ent.RestaurantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RestaurantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RestaurantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RestaurantMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

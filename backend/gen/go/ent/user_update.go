@@ -14,6 +14,7 @@ import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/predicate"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/restaurant"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
 
@@ -168,6 +169,21 @@ func (uu *UserUpdate) AddAccessTokens(r ...*RefreshToken) *UserUpdate {
 	return uu.AddAccessTokenIDs(ids...)
 }
 
+// AddRestaurantIDs adds the "restaurants" edge to the Restaurant entity by IDs.
+func (uu *UserUpdate) AddRestaurantIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddRestaurantIDs(ids...)
+	return uu
+}
+
+// AddRestaurants adds the "restaurants" edges to the Restaurant entity.
+func (uu *UserUpdate) AddRestaurants(r ...*Restaurant) *UserUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uu.AddRestaurantIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -213,6 +229,27 @@ func (uu *UserUpdate) RemoveAccessTokens(r ...*RefreshToken) *UserUpdate {
 		ids[i] = r[i].ID
 	}
 	return uu.RemoveAccessTokenIDs(ids...)
+}
+
+// ClearRestaurants clears all "restaurants" edges to the Restaurant entity.
+func (uu *UserUpdate) ClearRestaurants() *UserUpdate {
+	uu.mutation.ClearRestaurants()
+	return uu
+}
+
+// RemoveRestaurantIDs removes the "restaurants" edge to Restaurant entities by IDs.
+func (uu *UserUpdate) RemoveRestaurantIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveRestaurantIDs(ids...)
+	return uu
+}
+
+// RemoveRestaurants removes "restaurants" edges to Restaurant entities.
+func (uu *UserUpdate) RemoveRestaurants(r ...*Restaurant) *UserUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uu.RemoveRestaurantIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -384,6 +421,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.RestaurantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RestaurantsTable,
+			Columns: []string{user.RestaurantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedRestaurantsIDs(); len(nodes) > 0 && !uu.mutation.RestaurantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RestaurantsTable,
+			Columns: []string{user.RestaurantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RestaurantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RestaurantsTable,
+			Columns: []string{user.RestaurantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -542,6 +624,21 @@ func (uuo *UserUpdateOne) AddAccessTokens(r ...*RefreshToken) *UserUpdateOne {
 	return uuo.AddAccessTokenIDs(ids...)
 }
 
+// AddRestaurantIDs adds the "restaurants" edge to the Restaurant entity by IDs.
+func (uuo *UserUpdateOne) AddRestaurantIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddRestaurantIDs(ids...)
+	return uuo
+}
+
+// AddRestaurants adds the "restaurants" edges to the Restaurant entity.
+func (uuo *UserUpdateOne) AddRestaurants(r ...*Restaurant) *UserUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uuo.AddRestaurantIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -587,6 +684,27 @@ func (uuo *UserUpdateOne) RemoveAccessTokens(r ...*RefreshToken) *UserUpdateOne 
 		ids[i] = r[i].ID
 	}
 	return uuo.RemoveAccessTokenIDs(ids...)
+}
+
+// ClearRestaurants clears all "restaurants" edges to the Restaurant entity.
+func (uuo *UserUpdateOne) ClearRestaurants() *UserUpdateOne {
+	uuo.mutation.ClearRestaurants()
+	return uuo
+}
+
+// RemoveRestaurantIDs removes the "restaurants" edge to Restaurant entities by IDs.
+func (uuo *UserUpdateOne) RemoveRestaurantIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveRestaurantIDs(ids...)
+	return uuo
+}
+
+// RemoveRestaurants removes "restaurants" edges to Restaurant entities.
+func (uuo *UserUpdateOne) RemoveRestaurants(r ...*Restaurant) *UserUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uuo.RemoveRestaurantIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -781,6 +899,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.RestaurantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RestaurantsTable,
+			Columns: []string{user.RestaurantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedRestaurantsIDs(); len(nodes) > 0 && !uuo.mutation.RestaurantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RestaurantsTable,
+			Columns: []string{user.RestaurantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RestaurantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RestaurantsTable,
+			Columns: []string{user.RestaurantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

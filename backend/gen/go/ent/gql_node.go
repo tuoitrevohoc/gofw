@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/restaurant"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	"golang.org/x/sync/semaphore"
 )
@@ -34,6 +35,11 @@ var refreshtokenImplementors = []string{"RefreshToken", "Node"}
 
 // IsNode implements the Node interface check for GQLGen.
 func (*RefreshToken) IsNode() {}
+
+var restaurantImplementors = []string{"Restaurant", "Node"}
+
+// IsNode implements the Node interface check for GQLGen.
+func (*Restaurant) IsNode() {}
 
 var userImplementors = []string{"User", "Node"}
 
@@ -112,6 +118,15 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			Where(refreshtoken.ID(id))
 		if fc := graphql.GetFieldContext(ctx); fc != nil {
 			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, refreshtokenImplementors...); err != nil {
+				return nil, err
+			}
+		}
+		return query.Only(ctx)
+	case restaurant.Table:
+		query := c.Restaurant.Query().
+			Where(restaurant.ID(id))
+		if fc := graphql.GetFieldContext(ctx); fc != nil {
+			if err := query.collectField(ctx, true, graphql.GetOperationContext(ctx), fc.Field, nil, restaurantImplementors...); err != nil {
 				return nil, err
 			}
 		}
@@ -218,6 +233,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.RefreshToken.Query().
 			Where(refreshtoken.IDIn(ids...))
 		query, err := query.CollectFields(ctx, refreshtokenImplementors...)
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case restaurant.Table:
+		query := c.Restaurant.Query().
+			Where(restaurant.IDIn(ids...))
+		query, err := query.CollectFields(ctx, restaurantImplementors...)
 		if err != nil {
 			return nil, err
 		}

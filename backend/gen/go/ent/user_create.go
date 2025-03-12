@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/credential"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
+	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/restaurant"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 )
 
@@ -126,6 +127,21 @@ func (uc *UserCreate) AddAccessTokens(r ...*RefreshToken) *UserCreate {
 		ids[i] = r[i].ID
 	}
 	return uc.AddAccessTokenIDs(ids...)
+}
+
+// AddRestaurantIDs adds the "restaurants" edge to the Restaurant entity by IDs.
+func (uc *UserCreate) AddRestaurantIDs(ids ...int) *UserCreate {
+	uc.mutation.AddRestaurantIDs(ids...)
+	return uc
+}
+
+// AddRestaurants adds the "restaurants" edges to the Restaurant entity.
+func (uc *UserCreate) AddRestaurants(r ...*Restaurant) *UserCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return uc.AddRestaurantIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -257,6 +273,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.RestaurantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RestaurantsTable,
+			Columns: []string{user.RestaurantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

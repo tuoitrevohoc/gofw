@@ -24,6 +24,14 @@ func (rt *RefreshToken) User(ctx context.Context) (*User, error) {
 	return result, err
 }
 
+func (r *Restaurant) Owner(ctx context.Context) (*User, error) {
+	result, err := r.Edges.OwnerOrErr()
+	if IsNotLoaded(err) {
+		result, err = r.QueryOwner().Only(ctx)
+	}
+	return result, err
+}
+
 func (u *User) Credentials(ctx context.Context) (result []*Credential, err error) {
 	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
 		result, err = u.NamedCredentials(graphql.GetFieldContext(ctx).Field.Alias)
@@ -44,6 +52,18 @@ func (u *User) AccessTokens(ctx context.Context) (result []*RefreshToken, err er
 	}
 	if IsNotLoaded(err) {
 		result, err = u.QueryAccessTokens().All(ctx)
+	}
+	return result, err
+}
+
+func (u *User) Restaurants(ctx context.Context) (result []*Restaurant, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = u.NamedRestaurants(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = u.Edges.RestaurantsOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = u.QueryRestaurants().All(ctx)
 	}
 	return result, err
 }
