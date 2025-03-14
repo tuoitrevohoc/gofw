@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func LoadConfig[AppConfig any](path string) (*AppConfig, error) {
+func LoadConfig[AppConfig any]() (*AppConfig, error) {
 
 	env := "local" // default environment
 	if envVar := os.Getenv("ENV"); envVar != "" {
