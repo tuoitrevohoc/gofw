@@ -1223,7 +1223,7 @@ func (ec *executionContext) field_Query_node_argsID(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, tmp)
+		return ec.unmarshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx, tmp)
 	}
 
 	var zeroVal scalars.GUID
@@ -1251,7 +1251,7 @@ func (ec *executionContext) field_Query_nodes_argsIds(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
 	if tmp, ok := rawArgs["ids"]; ok {
-		return ec.unmarshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUIDᚄ(ctx, tmp)
+		return ec.unmarshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUIDᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*scalars.GUID
@@ -1733,7 +1733,7 @@ func (ec *executionContext) _Credential_id(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*scalars.GUID)
 	fc.Result = res
-	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, field.Selections, res)
+	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Credential_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2924,7 +2924,7 @@ func (ec *executionContext) _RefreshToken_id(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*scalars.GUID)
 	fc.Result = res
-	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, field.Selections, res)
+	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RefreshToken_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3342,7 +3342,7 @@ func (ec *executionContext) _Restaurant_id(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*scalars.GUID)
 	fc.Result = res
-	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, field.Selections, res)
+	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Restaurant_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3780,7 +3780,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	}
 	res := resTmp.(*scalars.GUID)
 	fc.Result = res
-	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, field.Selections, res)
+	return ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4302,7 +4302,7 @@ func (ec *executionContext) _Viewer_userId(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*scalars.GUID)
 	fc.Result = res
-	return ec.marshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Viewer_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6370,7 +6370,7 @@ func (ec *executionContext) unmarshalInputSaveRestaurantInput(ctx context.Contex
 		switch k {
 		case "id":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, v)
+			data, err := ec.unmarshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8046,17 +8046,17 @@ func (ec *executionContext) marshalNCursor2entgoᚗioᚋcontribᚋentgqlᚐCurso
 	return v
 }
 
-func (ec *executionContext) unmarshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, v any) (scalars.GUID, error) {
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx context.Context, v any) (scalars.GUID, error) {
 	var res scalars.GUID
 	err := res.UnmarshalGQLContext(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, sel ast.SelectionSet, v scalars.GUID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2githubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx context.Context, sel ast.SelectionSet, v scalars.GUID) graphql.Marshaler {
 	return graphql.WrapContextMarshaler(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUIDᚄ(ctx context.Context, v any) ([]*scalars.GUID, error) {
+func (ec *executionContext) unmarshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUIDᚄ(ctx context.Context, v any) ([]*scalars.GUID, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -8065,7 +8065,7 @@ func (ec *executionContext) unmarshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgof
 	res := make([]*scalars.GUID, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -8073,10 +8073,10 @@ func (ec *executionContext) unmarshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgof
 	return res, nil
 }
 
-func (ec *executionContext) marshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUIDᚄ(ctx context.Context, sel ast.SelectionSet, v []*scalars.GUID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUIDᚄ(ctx context.Context, sel ast.SelectionSet, v []*scalars.GUID) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx, sel, v[i])
+		ret[i] = ec.marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx, sel, v[i])
 	}
 
 	for _, e := range ret {
@@ -8088,13 +8088,13 @@ func (ec *executionContext) marshalNID2ᚕᚖgithubᚗcomᚋtuoitrevohocᚋgofw�
 	return ret
 }
 
-func (ec *executionContext) unmarshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, v any) (*scalars.GUID, error) {
+func (ec *executionContext) unmarshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx context.Context, v any) (*scalars.GUID, error) {
 	var res = new(scalars.GUID)
 	err := res.UnmarshalGQLContext(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, sel ast.SelectionSet, v *scalars.GUID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx context.Context, sel ast.SelectionSet, v *scalars.GUID) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -8614,7 +8614,7 @@ func (ec *executionContext) marshalOCursor2ᚖentgoᚗioᚋcontribᚋentgqlᚐCu
 	return v
 }
 
-func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, v any) (*scalars.GUID, error) {
+func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx context.Context, v any) (*scalars.GUID, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -8623,7 +8623,7 @@ func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofw�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋinternalᚋscalarsᚐGUID(ctx context.Context, sel ast.SelectionSet, v *scalars.GUID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋtuoitrevohocᚋgofwᚋbackendᚋpackagesᚋscalarsᚐGUID(ctx context.Context, sel ast.SelectionSet, v *scalars.GUID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
