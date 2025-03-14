@@ -4,7 +4,7 @@ package model
 
 import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
-	"github.com/tuoitrevohoc/gofw/backend/internal/scalars"
+	"github.com/tuoitrevohoc/gofw/backend/package/scalars"
 )
 
 type AccessToken struct {

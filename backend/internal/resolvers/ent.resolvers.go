@@ -17,7 +17,7 @@ import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	graphql1 "github.com/tuoitrevohoc/gofw/backend/gen/go/graphql"
 	"github.com/tuoitrevohoc/gofw/backend/internal/auth"
-	"github.com/tuoitrevohoc/gofw/backend/internal/scalars"
+	"github.com/tuoitrevohoc/gofw/backend/package/scalars"
 )
 
 // ID is the resolver for the id field.

@@ -21,7 +21,7 @@ autobind:
 models:
   ID:
     model:
-      - github.com/tuoitrevohoc/gofw/backend/internal/scalars.GUID
+      - github.com/tuoitrevohoc/gofw/backend/package/scalars.GUID
   Node:
     model:
       - "github.com/tuoitrevohoc/gofw/backend/gen/go/ent.Noder"
