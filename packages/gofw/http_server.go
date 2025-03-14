@@ -79,3 +79,7 @@ func (s *HttpServer) Run(ctx context.Context) error {
 		return err
 	}
 }
+
+func (s *HttpServer) UseGraphQLPlayground() {
+	s.AddHandler("/graphql/playground", GraphiQLHandler())
+}
