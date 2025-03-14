@@ -3,6 +3,8 @@ package gofw
 import (
 	"context"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 // Middleware is a function that wraps an http.Handler and returns a new http.Handler
@@ -62,6 +64,7 @@ func (s *HttpServer) Run(ctx context.Context) error {
 
 	// Start server in a goroutine
 	go func() {
+		s.manager.Logger().Info("Starting HTTP server on port ", zap.String("port", s.port))
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errChan <- err
 		}
