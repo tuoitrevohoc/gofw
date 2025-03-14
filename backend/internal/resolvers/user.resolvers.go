@@ -15,7 +15,7 @@ import (
 	graphql1 "github.com/tuoitrevohoc/gofw/backend/gen/go/graphql"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/graphql/model"
 	"github.com/tuoitrevohoc/gofw/backend/internal/auth"
-	"github.com/tuoitrevohoc/gofw/backend/package/scalars"
+	"github.com/tuoitrevohoc/gofw/backend/packages/scalars"
 	"golang.org/x/crypto/bcrypt"
 )
 

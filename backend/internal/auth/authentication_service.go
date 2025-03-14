@@ -13,8 +13,8 @@ import (
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/refreshtoken"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent/user"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/graphql/model"
-	"github.com/tuoitrevohoc/gofw/backend/package/scalars"
 	"github.com/tuoitrevohoc/gofw/backend/packages/gofw"
+	"github.com/tuoitrevohoc/gofw/backend/packages/scalars"
 )
 
 const (

@@ -17,7 +17,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/ent"
 	"github.com/tuoitrevohoc/gofw/backend/gen/go/graphql/model"
-	"github.com/tuoitrevohoc/gofw/backend/package/scalars"
+	"github.com/tuoitrevohoc/gofw/backend/packages/scalars"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
