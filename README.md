@@ -1,5 +1,14 @@
 # Go Framework Project
 
+# Getting started:
+
+Run this command:
+
+```
+curl -sL "https://raw.githubusercontent.com/tuoitrevohoc/gofw/refs/heads/main/scripts/bootstrap.sh" \
+  -o /tmp/gofw-bootstrap.sh && chmod +x /tmp/gofw-bootstrap.sh && /tmp/gofw-bootstrap.sh
+```
+
 ## Development Setup
 
 ### Prerequisites

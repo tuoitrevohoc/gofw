@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Prompt for package name
-read -p "Please enter the package name (e.g. github.com/your-handle/your-project-name): " PACKAGE_NAME
+read -p "Please enter the package name (e.g. your-github-handle/your-project-name): " PACKAGE_NAME
 
 # Check if the package name is empty
 if [ -z "$PACKAGE_NAME" ]; then
@@ -25,7 +25,7 @@ echo "Contents of temporary directory:"
 ls -la "$TEMP_DIR"
 
 # Replace all occurrences of the string in the files
-find "$TEMP_DIR" -type f -exec echo "Executing: sed -i '' 's|github.com/tuoitrevohoc/gofw-template|$PACKAGE_NAME|g' {}" \; -exec sed -i '' "s|github.com/tuoitrevohoc/gofw-template|$PACKAGE_NAME|g" {} \;
+find "$TEMP_DIR" -type f -exec echo "Executing: sed -i '' 's|tuoitrevohoc/gofw-template|$PACKAGE_NAME|g' {}" \; -exec sed -i '' "s|github.com/tuoitrevohoc/gofw-template|$PACKAGE_NAME|g" {} \;
 
 
 # Copy all files and folders except the .git folder to the current directory
