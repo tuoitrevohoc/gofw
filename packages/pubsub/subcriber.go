@@ -14,7 +14,7 @@ type Subscription[Event any] interface {
 
 type Subscriber[Event any] interface {
 	Subscribe(ctx context.Context, topic string) (Subscription[Event], error)
-	SubscribeToChannel(ctx context.Context, topic string) (chan <- Event, error)
+	SubscribeToChannel(ctx context.Context, topic string) (<-chan  Event, error)
 }
 
 type RedisSubscriber[Event any] struct {
@@ -57,7 +57,7 @@ func (s *RedisSubscriber[Event]) Subscribe(ctx context.Context, topic string) (S
 	return &RedisSubscription[Event]{sub: sub, channel: ch}, nil
 }
 
-func (s *RedisSubscriber[Event]) SubscribeToChannel(ctx context.Context, topic string) (chan <- Event, error) {
+func (s *RedisSubscriber[Event]) SubscribeToChannel(ctx context.Context, topic string) (<-chan Event, error) {
 	sub := s.redis.Subscribe(ctx, topic)
 	ch := make(chan Event)
 
