@@ -7,6 +7,8 @@ require (
 	github.com/DataDog/datadog-go/v5 v5.6.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.5.0
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/redis/go-redis/v9 v9.7.1
 	github.com/spf13/viper v1.19.0
 	github.com/vektah/gqlparser/v2 v2.5.23
@@ -21,7 +23,6 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
