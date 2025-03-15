@@ -5,8 +5,7 @@
 Run this command:
 
 ```
-curl -sL "https://raw.githubusercontent.com/tuoitrevohoc/gofw/refs/heads/main/scripts/bootstrap.sh" \
-  -o /tmp/gofw-bootstrap.sh && chmod +x /tmp/gofw-bootstrap.sh && /tmp/gofw-bootstrap.sh
+curl -sLo /tmp/bootstrap.sh https://raw.githubusercontent.com/tuoitrevohoc/gofw/refs/heads/main/scripts/bootstrap.sh && chmod +x /tmp/bootstrap.sh && /tmp/bootstrap.sh
 ```
 
 ## Development Setup
