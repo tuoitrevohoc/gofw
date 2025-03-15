@@ -2,7 +2,6 @@ package gofw
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/DataDog/datadog-go/v5/statsd"
@@ -18,16 +17,6 @@ type requestResponseKey struct{}
 type RequestResponse struct {
 	Request  *http.Request
 	Response *http.ResponseWriter
-}
-
-type CustomResponseWriter struct {
-	http.ResponseWriter
-	StatusCode int
-}
-
-func (w *CustomResponseWriter) WriteHeader(statusCode int) {
-	w.StatusCode = statusCode
-	w.ResponseWriter.WriteHeader(statusCode)
 }
 
 const RequestIDHeader = "X-Request-ID"
@@ -126,15 +115,7 @@ func ServiceManagerMiddleware(manager *ServiceManager) func(http.Handler) http.H
 				}
 			}()
 
-			responseWriter := &CustomResponseWriter{
-				ResponseWriter: w,
-				StatusCode:     http.StatusOK,
-			}
-
-			next.ServeHTTP(responseWriter, r.WithContext(ctx))
-			manager.Statsd().Incr("http_server_request", []string{
-				fmt.Sprintf("status:%d", responseWriter.StatusCode),
-			}, 1)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
