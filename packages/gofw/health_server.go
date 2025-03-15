@@ -4,32 +4,30 @@ import (
 	"context"
 	"net/http"
 
-	"go.uber.org/zap"
+	"github.com/go-chi/chi/v5"
 )
 
 type HealthServer struct {
-	server         *http.Server
+	port             string
+	router           chi.Router
 	serviceManager *ServiceManager
 }
 
 func NewHealthServer(serviceManager *ServiceManager, port string) *HealthServer {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	router := chi.NewRouter()
+	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 		serviceManager.Statsd().Incr("health_server.requests", nil, 1)
 	})
 
 	return &HealthServer{
-		server: &http.Server{
-			Addr:    ":" + port,
-			Handler: mux,
-		},
+		router:           router,
 		serviceManager: serviceManager,
+		port:             port,
 	}
 }
 
 func (s *HealthServer) Run(ctx context.Context) error {
-	s.serviceManager.Logger().Info("Starting health server", zap.String("address", s.server.Addr))
-	return s.server.ListenAndServe()
+	return http.ListenAndServe(":"+s.port, s.router)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
@@ -12,20 +13,20 @@ type Middleware func(http.Handler) http.Handler
 
 type HttpServer struct {
 	port       string
-	mux        *http.ServeMux
+	router     chi.Router
 	manager    *ServiceManager
 	middleware []Middleware
 }
 
 func NewHttpServer(manager *ServiceManager, port string) *HttpServer {
-	mux := http.NewServeMux()
+	router := chi.NewRouter()
 	defaultMiddlewares := []Middleware{
 		ServiceManagerMiddleware(manager),
 	}
 
 	server := &HttpServer{
 		port:       port,
-		mux:        mux,
+		router:     router,
 		manager:    manager,
 		middleware: defaultMiddlewares,
 	}
@@ -39,7 +40,7 @@ func (s *HttpServer) Use(middleware ...Middleware) {
 }
 
 func (s *HttpServer) AddHandler(path string, handler http.Handler) {
-	s.mux.HandleFunc(path, handler.ServeHTTP)
+	s.router.Handle(path, handler)
 }
 
 // chainMiddleware chains all registered middleware with the final handler
@@ -56,7 +57,7 @@ func (s *HttpServer) chainMiddleware(finalHandler http.Handler) http.Handler {
 func (s *HttpServer) Run(ctx context.Context) error {
 	server := &http.Server{
 		Addr:    ":" + s.port,
-		Handler: s.chainMiddleware(s.mux), // Apply middleware chain to the mux
+		Handler: s.chainMiddleware(s.router), // Apply middleware chain to the mux
 	}
 
 	// Channel to capture server errors
