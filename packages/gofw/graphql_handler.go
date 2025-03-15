@@ -43,8 +43,6 @@ func GQLHandler(schema graphql.ExecutableSchema) *handler.Server {
 		Cache: lru.New[string](100),
 	})
 
-	handler.NewDefaultServer()
-
 	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
 		err := graphql.DefaultErrorPresenter(ctx, e)
 		logger := ContextLogger(ctx)
