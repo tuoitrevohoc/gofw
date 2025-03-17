@@ -2,6 +2,7 @@ package pubsub
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -21,5 +22,10 @@ func NewRedisPublisher(redis *redis.Client) Publisher {
 }
 
 func (p *RedisPublisher) Publish(ctx context.Context, topic string, message interface{}) error {
-	return p.redis.Publish(ctx, topic, message).Err()
+	// encode message to json
+	json, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+	return p.redis.Publish(ctx, topic, json).Err()
 }
