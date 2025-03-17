@@ -7,34 +7,33 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type Subscription[Event any] interface {
-	Channel() <-chan Event
+type Subscription interface {
+	Channel() <-chan string
 	Close() error
 }
 
-type Subscriber[Event any] interface {
-	Subscribe(ctx context.Context, topic string) (Subscription[Event], error)
-	SubscribeToChannel(ctx context.Context, topic string) (<-chan  Event, error)
+type Subscriber interface {
+	Subscribe(ctx context.Context, topic string) (Subscription, error)
 }
 
-type RedisSubscriber[Event any] struct {
+type RedisSubscriber struct {
 	redis *redis.Client
 }
 
-type RedisSubscription[Event any] struct {
+type RedisSubscription struct {
 	sub *redis.PubSub
-	channel <-chan Event
+	channel <-chan string
 }
 
-func NewRedisSubscriber[Event any](redis *redis.Client) Subscriber[Event] {
-	return &RedisSubscriber[Event]{
+func NewRedisSubscriber(redis *redis.Client) Subscriber {
+	return &RedisSubscriber{
 		redis: redis,
 	}
 }
 
-func (s *RedisSubscriber[Event]) Subscribe(ctx context.Context, topic string) (Subscription[Event], error) {
+func (s *RedisSubscriber) Subscribe(ctx context.Context, topic string) (Subscription, error) {
 	sub := s.redis.Subscribe(ctx, topic)
-	ch := make(chan Event)
+	ch := make(chan string)
 
 
 	go func() {
@@ -44,24 +43,22 @@ func (s *RedisSubscriber[Event]) Subscribe(ctx context.Context, topic string) (S
 			case <- ctx.Done():
 				return
 			case msg := <- sub.Channel():
-				var event Event
-				err := json.Unmarshal([]byte(msg.Payload), &event)
-				if err != nil {
-					return
-				}
-				ch <- event
+				ch <- msg.Payload
 			}
 		}
 	}()
 
-	return &RedisSubscription[Event]{sub: sub, channel: ch}, nil
+	return &RedisSubscription{sub: sub, channel: ch}, nil
 }
 
-func (s *RedisSubscriber[Event]) SubscribeToChannel(ctx context.Context, topic string) (<-chan Event, error) {
-	sub := s.redis.Subscribe(ctx, topic)
+func SubscribeToChannel[Event any](ctx context.Context, subscriber Subscriber, topic string) (<-chan Event, error) {
+	sub, err := subscriber.Subscribe(ctx, topic)
+	if err != nil {
+		return nil, err
+	}
 	ch := make(chan Event)
 
-	go func() {
+	go func() {	
 		defer close(ch)
 		for {
 			select {
@@ -70,7 +67,7 @@ func (s *RedisSubscriber[Event]) SubscribeToChannel(ctx context.Context, topic s
 				return
 			case msg := <- sub.Channel():
 				var event Event
-				err := json.Unmarshal([]byte(msg.Payload), &event)
+				err := json.Unmarshal([]byte(msg), &event)
 				if err != nil {
 					return
 				}
@@ -82,11 +79,11 @@ func (s *RedisSubscriber[Event]) SubscribeToChannel(ctx context.Context, topic s
 	return ch, nil
 }
 
-func (s *RedisSubscription[Event]) Close() error {
+func (s *RedisSubscription) Close() error {
 	return s.sub.Close()
 }
 
-func (s *RedisSubscription[Event]) Channel() <-chan Event {
+func (s *RedisSubscription) Channel() <-chan string {
 	return s.channel
 }
 
