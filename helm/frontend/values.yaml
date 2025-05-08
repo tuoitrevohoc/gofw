@@ -1,0 +1,101 @@
+namespaceOverride: frontend
+
+fullnameOverride: "reactjs-app"
+
+# -- Image parameters
+image:
+  registry: docker.io
+  repository: gofw/reactjs-app # CHANGE THIS
+  tag: 0.1.0
+  pullPolicy: IfNotPresent
+
+# -- Common labels to add to all deployed objects
+commonLabels: {}
+  # my-reactjs-frontend: reactjs  
+
+# -- Common annotations to add to all deployed objects
+commonAnnotations: {}
+
+# -- Deployment parameters - using common chart defaults mostly
+replicaCount: 1
+
+# -- Service parameters of reactjs-app
+service:
+  enabled: true
+  type: ClusterIP
+  port: 80  
+  targetPort: 8080
+  # annotations: {} # Add any specific service annotations if needed
+
+# -- Service Account of the reactjs-app
+serviceAccount:
+  create: true
+  name: reactjs-sa
+  automountServiceAccountToken: true
+
+containerPorts:
+  http: 8080
+  https: 443
+  healthcheck: 9090
+#   defaultServer: 8181
+#   metrics: 10254
+#   profiler: 10245
+#   status: 10246
+#   stream: 10247
+
+podSecurityContext:
+  enabled: true
+  fsGroupChangePolicy: Always
+  sysctls: []
+  supplementalGroups: []
+  fsGroup: 1001
+  runAsUser: 1001
+  runAsGroup: 1001
+  runAsNonRoot: true  
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  # runAsUser: 1001 # Optional: can be same as Pod's or different if needed
+  # runAsGroup: 1001 # Optional: can be same as Pod's or different if needed
+  capabilities:
+    drop:
+      - "ALL"
+
+
+
+# -- Ingress parameters
+# -- For more details, please follow https://github.com/bitnami/charts/blob/main/template/CHART_NAME/README.md
+ingress:
+  enabled: true
+  hostname: reactjs-app.local # CHANGE THIS AND ADD TO hostname to etc/hots Linux or driver/etc/hosts Windows
+  ingressClassName: "nginx" # Specify the IngressClass provided by the nginx-ingress-controller subchart
+  path: "/"
+  pathType: Prefix # Common path type, can be Prefix, Exact, or ImplementationSpecific
+  # tls: true # If TLS is enabled
+  # selfSigned: true # If using self-signed certificates (requires cert-manager)
+  # annotations: {} # Add custom ingress annotations
+  # secrets: # TLS secrets (only needed if tls=true and selfSigned=false)
+  #   - name: reactjs-app-tls
+  #     certificate: /path/to/cert.pem
+  #     key: /path/to/key.pem
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# --  Health check depends on deployment services
+livenessProbe:
+  enabled: true
+  path: /liveness
+  port: healthcheck
+
+
+readinessProbe:
+  enabled: true 
+  path: /readiness
+  port: healthcheck

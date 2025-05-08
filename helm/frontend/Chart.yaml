@@ -1,0 +1,8 @@
+apiVersion: v2
+name: reactjs-app
+version: 0.1.0
+dependencies:
+  - name: nginx-ingress-controller
+    version: 11.6.18
+    repository: oci://registry-1.docker.io/bitnamicharts
+description: A Helm chart for deploying the reactjs application

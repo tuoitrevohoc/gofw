@@ -1,0 +1,15 @@
+frontend:
+  image: my-frontend-image:v1
+  replicas: 1
+
+backend:
+  image: my-backend-image:v1
+  replicas: 1
+
+cache:
+  image: redis:latest
+  replicas: 1
+
+monitoring:
+  prometheus:
+    scrape_interval: 15s

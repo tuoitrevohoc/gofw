@@ -1,0 +1,31 @@
+apiVersion: v2
+name: gofw
+description: Helm chart for frontend, backend, cache, and monitoring services
+version: 0.1.0
+type: application
+dependencies:
+  - name: frontend
+    version: 0.1.0
+    repository: file://frontend
+  - name: backend
+    version: 0.1.0
+    repository: file://backend
+  - name: cache
+    version: 0.1.0
+    repository: file://cache
+  - name: monitoring
+    version: 0.1.0
+    repository: file://monitoring
+maintainers:
+  - name: Kiem Tran
+    email: your.email@example.com
+keywords:
+  - gofw
+  - reactjs-app
+  - frontend
+  - helm
+  - chart
+  - kubernetes
+home: https://example.com
+sources:
+  - https://github.com/your-repo/frontend
